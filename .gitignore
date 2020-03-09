@@ -348,3 +348,9 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/Other
+/Markets/.vscode
+/Markets/Markets.sln
+/Markets/Markets/Markets.pyproj
+/.ipynb_checkpoints
+/Markets/Markets/API/env
