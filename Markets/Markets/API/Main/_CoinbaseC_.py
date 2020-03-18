@@ -14,6 +14,9 @@ class Coinbase_Functions(API_req_creation, Coinbase):
         API_req_creation.__init__(self)
         self.session = self._init_session()
 
+    def close(self):
+        self.session.close()
+
     def product(self):
 
         return self._get('products')

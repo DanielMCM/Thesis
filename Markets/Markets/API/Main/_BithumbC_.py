@@ -14,6 +14,9 @@ class Bithumb_Functions(API_req_creation, Bithumb):
         API_req_creation.__init__(self)
         self.session = self._init_session()
 
+    def close(self):
+        self.session.close()
+
     def ticker(self, first, second):
 
         return self._get('public/ticker/' + first + "_" + second)
