@@ -14,3 +14,5 @@ class Coinbase(Constant_values):
     PUBLIC_API_VERSION = ''
     PRIVATE_API_VERSION = ''
     MARKET = 'Coinbase'
+
+    STREAM_URL = "wss://ws-feed.pro.coinbase.com/"
