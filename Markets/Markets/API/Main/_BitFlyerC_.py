@@ -19,6 +19,24 @@ class BitFlyer_Functions(API_req_creation,Binance):
     def close(self):
         self.session.close()
 
-    def ticker(self, symbols):
+    def ticker(self, symbol):
 
-        return self._get('ticker', **{"params": {"product_code": symbols}})
+        return self._get('ticker', **{"params": {"product_code": symbol}})
+
+    def markets(self):
+
+        return self._get('getmarkets')
+
+    def book(self, symbol):
+
+        return self._get('getboard', **{"params": {"product_code": symbol}})
+
+    def history(self, symbol, count, before, after):
+
+        return self._get('getexecutions', **{"params": {"product_code": symbol, "count": count, "before": before, "after":after}})
+
+    def status(self, symbol):
+
+         return self._get('gethealth', **{"params": {"product_code": symbol}})
+
+     # Websockets

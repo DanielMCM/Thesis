@@ -20,6 +20,9 @@ class API_req_creation():
                                 'X-MBX-APIKEY': self.API_KEY})
         return session
 
+    def close(self):
+        self.session.close()
+
     def _get(self, path, signed=False, version='', **kwargs):
         return self._request_api('get', path, signed, version, **kwargs)
 
