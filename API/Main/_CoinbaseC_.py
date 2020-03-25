@@ -1,5 +1,5 @@
-from Markets.API.Helpers._Requests_ import API_req_creation
-from Markets.API.Constants.Coinbase_Con import Coinbase
+from API.Helpers._Requests_ import API_req_creation
+from API.Constants.Coinbase_Con import Coinbase
 
 #-----------------------------------------------
 #-----------------------------------------------

@@ -1,6 +1,6 @@
-from Markets.API.Helpers._Requests_ import API_req_creation
-from Markets.API.Helpers._Web_Requests_ import M_SocketManager
-from Markets.API.Constants.Binance_Con import Binance
+from API.Helpers._Requests_ import API_req_creation
+from API.Helpers._Web_Requests_ import M_SocketManager
+from API.Constants.Binance_Con import Binance
 
 #-----------------------------------------------
 #-----------------------------------------------
@@ -33,25 +33,36 @@ class Binance_Functions(API_req_creation,Binance):
 
         return self._get('depth', version = 'v3', **{"params": {"symbol": symbol, "limit":limit}})
 
-    #LAS TEST HERE 
-
     def trades(self, symbol, limit = 500):
 
         return self._get('trades', version = 'v3', **{"params": {"symbol": symbol, "limit":limit}})
 
     def htrades(self, symbol, limit = 500, fromId = ""):
+        if fromId == "":
+            p = {"params": {"symbol": symbol, "limit":limit}}
+        else:
+            p = {"params": {"symbol": symbol, "limit":limit, "fromId": fromId}}
 
-        return self._get('historicaltrades', version = 'v3', **{"params": {"symbol": symbol, "limit":limit, "fromId": fromId}})
+        return self._get('historicalTrades', version = 'v3', **p)
 
     def aggtrades(self, symbol, fromId = "", startTime = "", endTime = "", limit = 500):
+        p = {"params": {"symbol": symbol, "limit": limit}}
+        if fromId != "":
+            p["params"]["fromID"] = fromId
+        if startTime != "":
+            p["params"]["startTime"] = startTime
+        if endTime != "":
+            p["params"]["endTime"] = endTime
 
-        return self._get('aggTrades', version = 'v3', **{"params": {"symbol": symbol, "fromId": fromId, "startTime": startTime,\
-                                                                 "endTime": endTime, limit: "limit" }})
+        return self._get('aggTrades', version = 'v3', **p)
 
     def klines(self, symbol, interval, startTime = "", endTime = "", limit = 500):
-
-        return self._get('klines', version = 'v3', **{"params": {"symbol": symbol, "interval": interval, "startTime": startTime,\
-                                                                 "endTime": endTime, limit: "limit" }})
+        p = {"params": {"symbol": symbol, "interval": interval, "limit": limit }}
+        if startTime != "":
+            p["params"]["startTime"] = startTime
+        if endTime != "":
+            p["params"]["endTime"] = endTime
+        return self._get('klines', version = 'v3', **p)
 
     def avgPrice(self, symbol):
 
@@ -60,15 +71,15 @@ class Binance_Functions(API_req_creation,Binance):
     
     def tkr24(self, symbol):
 
-        return self._get('24hr', version = 'v3', **{"params": {"symbol": symbol}})
+        return self._get('ticker/24hr', version = 'v3', **{"params": {"symbol": symbol}})
 
     def price(self, symbol):
 
-        return self._get('price', version = 'v3', **{"params": {"symbol": symbol}})
+        return self._get('ticker/price', version = 'v3', **{"params": {"symbol": symbol}})
 
     def bookTicker(self, symbol):
 
-        return self._get('bookTicker', version = 'v3', **{"params": {"symbol": symbol}})
+        return self._get('ticker/bookTicker', version = 'v3', **{"params": {"symbol": symbol}})
 
 class Binance_Web_Functions(Binance, M_SocketManager):
 
@@ -82,15 +93,12 @@ class Binance_Web_Functions(Binance, M_SocketManager):
     def start_aggtrade_socket(self, symbol, callback):
         return self._start_socket(symbol.lower() + '@aggTrade', callback)
 
-    def start_kline_socket(self, symbol, callback, interval=Client.KLINE_INTERVAL_1MINUTE):
+    def start_kline_socket(self, symbol, callback, interval="1m"):
         socket_name = '{}@kline_{}'.format(symbol.lower(), interval)
         return self._start_socket(socket_name, callback)
 
-    def start_miniticker_socket(self, callback, update_time=1000):
+    def start_miniticker_socket(self, symbol, callback, update_time=1000):
         return self._start_socket(symbol.lower() + '@arr@{}ms'.format(update_time), callback)
-
-    def start_miniticker_socket(self, callback, update_time=1000):
-        return self._start_socket('!miniTicker@arr@{}ms'.format(update_time), callback)
 
     def start_symbol_ticker_socket(self, symbol, callback):
         return self._start_socket(symbol.lower() + '@ticker', callback)

@@ -1,5 +1,5 @@
-from Markets.API.Helpers._Requests_ import API_req_creation
-from Markets.API.Constants.Bitfinex_Con import Bitfinex
+from API.Helpers._Requests_ import API_req_creation
+from API.Constants.Bitfinex_Con import Bitfinex
 
 #-----------------------------------------------
 #-----------------------------------------------
@@ -7,7 +7,7 @@ from Markets.API.Constants.Bitfinex_Con import Bitfinex
 #-----------------------------------------------
 #-----------------------------------------------
 
-class Bitfinex_Functions(API_req_creation, Bithumb):
+class Bitfinex_Functions(API_req_creation, Bitfinex):
 
     def __init__(self, api_key = None, private_key = None):
         Bitfinex.__init__(self, api_key, private_key)

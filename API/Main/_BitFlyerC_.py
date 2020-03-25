@@ -1,5 +1,5 @@
-from Markets.API.Helpers._Requests_ import API_req_creation
-from Markets.API.Constants.BitFlyer_Con import BitFlyer
+from API.Helpers._Requests_ import API_req_creation
+from API.Constants.BitFlyer_Con import BitFlyer
 
 #-----------------------------------------------
 #-----------------------------------------------
@@ -7,7 +7,7 @@ from Markets.API.Constants.BitFlyer_Con import BitFlyer
 #-----------------------------------------------
 #-----------------------------------------------
 
-class BitFlyer_Functions(API_req_creation,Binance):
+class BitFlyer_Functions(API_req_creation,BitFlyer):
     #def __init__(self, api_key, api_secret):
     #    Binance.__init__(self, api_key, api_secret)
 

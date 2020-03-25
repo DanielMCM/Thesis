@@ -354,3 +354,8 @@ MigrationBackup/
 /Markets/Markets/Markets.pyproj
 /.ipynb_checkpoints
 /Markets/Markets/API/env
+/.vscode
+/API/env
+/Markets.pyproj
+/Markets.sln
+/API.txt

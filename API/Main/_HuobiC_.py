@@ -1,5 +1,5 @@
-from Markets.API.Helpers._Requests_ import API_req_creation
-from Markets.API.Constants.Huobi_Con import Huobi
+from API.Helpers._Requests_ import API_req_creation
+from API.Constants.Huobi_Con import Huobi
 
 #-----------------------------------------------
 #-----------------------------------------------
@@ -7,7 +7,7 @@ from Markets.API.Constants.Huobi_Con import Huobi
 #-----------------------------------------------
 #-----------------------------------------------
 
-class Huobi_Functions(API_req_creation,Binance):
+class Huobi_Functions(API_req_creation,Huobi):
     #def __init__(self, api_key, api_secret):
     #    Binance.__init__(self, api_key, api_secret)
 

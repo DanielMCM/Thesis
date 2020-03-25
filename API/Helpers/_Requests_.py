@@ -1,6 +1,7 @@
-from Markets.API.Constants.Binance_Con import Binance
-from Markets.API.Constants.Coinbase_Con import Coinbase
-from Markets.API.Constants.General import Constant_values
+from API.Constants.Binance_Con import Binance
+from API.Constants.Coinbase_Con import Coinbase
+from API.Constants.General import Constant_values
+from API.Helpers._Exceptions_ import BinanceAPIException
 import time
 import requests
 
@@ -16,7 +17,7 @@ class API_req_creation():
         # Used sor starting a requests session
         session = requests.session()
         session.headers.update({'Accept': 'application/json',
-                                'User-Agent': self.MARKET + '/python',
+                                'User-Agent': 'binance/python',
                                 'X-MBX-APIKEY': self.API_KEY})
         return session
 
@@ -48,7 +49,6 @@ class API_req_creation():
             # generate signature
             kwargs['data']['timestamp'] = int(time.time() * 1000)
             kwargs['data']['signature'] = self._generate_signature(kwargs['data'])
-
 
         self.response = getattr(self.session, method)(uri, **kwargs)
         return self._handle_response()

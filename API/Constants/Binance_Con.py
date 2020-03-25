@@ -1,4 +1,4 @@
-from Markets.API.Constants.General import Constant_values
+from API.Constants.General import Constant_values
 
 class Binance(Constant_values):
 

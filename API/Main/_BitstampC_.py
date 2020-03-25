@@ -1,5 +1,6 @@
-from Markets.API.Helpers._Requests_ import API_req_creation
-from Markets.API.Constants.Kraken_Con import Kraken
+from API.Helpers._Requests_ import API_req_creation
+from API.Helpers._Web_Requests_ import M_SocketManager
+from API.Constants.Bitstamp_Con import Bitstamp
 
 #-----------------------------------------------
 #-----------------------------------------------
@@ -7,18 +8,18 @@ from Markets.API.Constants.Kraken_Con import Kraken
 #-----------------------------------------------
 #-----------------------------------------------
 
-class Kraken_Functions(API_req_creation,Binance):
+class Bitstamp_Functions(API_req_creation,Bitstamp):
     #def __init__(self, api_key, api_secret):
     #    Binance.__init__(self, api_key, api_secret)
 
     def __init__(self, api_key = None, private_key = None):
-        Kraken.__init__(self, api_key, private_key)
+        Bitstamp.__init__(self, api_key, private_key)
         API_req_creation.__init__(self)
         self.session = self._init_session()
 
     def close(self):
         self.session.close()
 
-    def ticker(self):
+    def ticker(self, pair):
 
-        return self._get('0/public/Ticker')
+        return self._get('public/ticker/')

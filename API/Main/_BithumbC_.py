@@ -1,5 +1,5 @@
-from Markets.API.Helpers._Requests_ import API_req_creation
-from Markets.API.Constants.Bithumb_Con import Bithumb
+from API.Helpers._Requests_ import API_req_creation
+from API.Constants.Bithumb_Con import Bithumb
 
 #-----------------------------------------------
 #-----------------------------------------------
