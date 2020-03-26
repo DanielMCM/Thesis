@@ -15,10 +15,18 @@ from binance.client import Client
 
 class M_ClientProtocol(WebSocketClientProtocol):
 
-    def __init__(self):
+    def __init__(self, factory, payload=None):
         super(WebSocketClientProtocol, self).__init__()
+        self.factory = factory
+        self.payload = payload
+        
+
+    def onOpen(self):
+        self.factory.protocol_instance = self
 
     def onConnect(self, response):
+        if self.payload != "":
+            self.sendMessage(self.payload, isBinary=False)
         # reset the delay after reconnecting
         self.factory.resetDelay()
 
@@ -30,6 +38,8 @@ class M_ClientProtocol(WebSocketClientProtocol):
                 pass
             else:
                 self.factory.callback(payload_obj)
+
+
 
 
 class M_ReconnectingClientFactory(ReconnectingClientFactory):
@@ -44,7 +54,14 @@ class M_ReconnectingClientFactory(ReconnectingClientFactory):
 
 class M_ClientFactory(WebSocketClientFactory, M_ReconnectingClientFactory):
 
+    def __init__(self, *args, payload=None, **kwargs):
+        WebSocketClientFactory.__init__(self, *args, **kwargs)
+        self.protocol_instance = None
+        self.base_client = None
+        self.payload = payload
+
     protocol = M_ClientProtocol
+
     _reconnect_error_payload = {
         'e': 'error',
         'm': 'Max reconnect retries reached'
@@ -59,6 +76,9 @@ class M_ClientFactory(WebSocketClientFactory, M_ReconnectingClientFactory):
         self.retry(connector)
         if self.retries > self.maxRetries:
             self.callback(self._reconnect_error_payload)
+
+    def buildProtocol(self, addr):
+        return M_ClientProtocol(self, payload = self.payload)
 
 
 class M_SocketManager(threading.Thread):
@@ -79,15 +99,18 @@ class M_SocketManager(threading.Thread):
         self._listen_keys = {'user': None, 'margin': None}
         self._account_callbacks = {'user': None, 'margin': None}
 
-    def _start_socket(self, path, callback, prefix='ws/'):
-        if path in self._conns:
-            return False
-
+    def _start_socket(self, path, callback, prefix='', **Kwargs):
+        payload = ""
+        if "payload" in Kwargs:
+            payload = json.dumps(Kwargs["payload"], ensure_ascii=False).encode('utf8')
+        #if path in self._conns:
+        #    return False
         factory_url = self.STREAM_URL + prefix + path
-        factory = M_ClientFactory(factory_url)
+        factory = M_ClientFactory(factory_url, payload = payload)
         factory.protocol = M_ClientProtocol
         factory.callback = callback
         factory.reconnect = True
+        factory.params
         context_factory = ssl.ClientContextFactory()
 
         self._conns[path] = connectWS(factory, context_factory)
@@ -138,4 +161,7 @@ class M_SocketManager(threading.Thread):
             self.stop_socket(key)
 
         self._conns = {}
-        reactor.stop()
+        try:
+            reactor.stop()
+        except:
+            pass

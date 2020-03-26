@@ -21,6 +21,8 @@ a = Client.Binance(api_key, secret_key)
 #
 
 print("First we ping\n")
+#print(a.ping())
+
 print("Now we check server time")
 check = datetime.fromtimestamp(a.get_server_time()["serverTime"]/1000).strftime('%Y-%m-%dT%H:%M:%SZ')
 print(datetime.fromtimestamp(time.time()).strftime('%Y-%m-%dT%H:%M:%SZ'))

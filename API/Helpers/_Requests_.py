@@ -42,15 +42,14 @@ class API_req_creation():
 
     def _request(self, method, uri, signed, force_params=False, **kwargs):
 
-        # set default requests timeout
-        kwargs['timeout'] = 10
-
         if signed:
             # generate signature
             kwargs['data']['timestamp'] = int(time.time() * 1000)
             kwargs['data']['signature'] = self._generate_signature(kwargs['data'])
-
+        print(uri)
+        print(kwargs)
         self.response = getattr(self.session, method)(uri, **kwargs)
+        print(self.response)
         return self._handle_response()
 
 

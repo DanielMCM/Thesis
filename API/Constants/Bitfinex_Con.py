@@ -9,6 +9,6 @@ class Bitfinex(Constant_values):
 
     MARKET = "Bitfinex"
 
-    STREAM_URL = "wss://api-pub.bitfinex.com/ws/2/"
+    STREAM_URL = "wss://api-pub.bitfinex.com/ws/2"
 
     # Authenticated wss://api.bitfinex.com/ws/2

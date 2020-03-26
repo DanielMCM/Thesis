@@ -11,3 +11,4 @@ class Client:
 
 class Web_Client:
     from ._BinanceC_ import Binance_Web_Functions as Binance
+    from ._BitfinexC_ import Bitfinex_Web_Functions as Bitfinex

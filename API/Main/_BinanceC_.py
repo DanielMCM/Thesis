@@ -57,7 +57,7 @@ class Binance_Functions(API_req_creation,Binance):
         return self._get('aggTrades', version = 'v3', **p)
 
     def klines(self, symbol, interval, startTime = "", endTime = "", limit = 500):
-        p = {"params": {"symbol": symbol, "interval": interval, "limit": limit }}
+        p = {"params": {"symbol": symbol, "interval": interval, "limit": limit}}
         if startTime != "":
             p["params"]["startTime"] = startTime
         if endTime != "":
@@ -88,36 +88,36 @@ class Binance_Web_Functions(Binance, M_SocketManager):
         M_SocketManager.__init__(self, self.STREAM_URL)
 
     def start_trade_socket(self, symbol, callback):
-        return self._start_socket(symbol.lower() + '@trade', callback)
+        return self._start_socket(symbol.lower() + '@trade', callback, prefix="ws/")
 
     def start_aggtrade_socket(self, symbol, callback):
-        return self._start_socket(symbol.lower() + '@aggTrade', callback)
+        return self._start_socket(symbol.lower() + '@aggTrade', callback, prefix="ws/")
 
     def start_kline_socket(self, symbol, callback, interval="1m"):
         socket_name = '{}@kline_{}'.format(symbol.lower(), interval)
-        return self._start_socket(socket_name, callback)
+        return self._start_socket(socket_name, callback, prefix="ws/")
 
     def start_miniticker_socket(self, symbol, callback, update_time=1000):
-        return self._start_socket(symbol.lower() + '@arr@{}ms'.format(update_time), callback)
+        return self._start_socket(symbol.lower() + '@arr@{}ms'.format(update_time), callback, prefix="ws/")
 
     def start_symbol_ticker_socket(self, symbol, callback):
-        return self._start_socket(symbol.lower() + '@ticker', callback)
+        return self._start_socket(symbol.lower() + '@ticker', callback, prefix="ws/")
 
     def start_ticker_socket(self, callback):
-        return self._start_socket('!ticker@arr', callback)
+        return self._start_socket('!ticker@arr', callback, prefix="ws/")
 
     def start_symbol_book_ticker_socket(self, symbol, callback):
-        return self._start_socket(symbol.lower() + '@bookTicker', callback)
+        return self._start_socket(symbol.lower() + '@bookTicker', callback, prefix="ws/")
 
     def start_book_ticker_socket(self, callback):
-        return self._start_socket('!bookTicker', callback)
+        return self._start_socket('!bookTicker', callback, prefix="ws/")
 
     def start_depth_socket(self, symbol, callback, depth=None):
         socket_name = symbol.lower() + '@depth'
         if depth and depth != '1':
             socket_name = '{}{}'.format(socket_name, depth)
-        return self._start_socket(socket_name, callback)
+        return self._start_socket(socket_name, callback, prefix="ws/")
 
     def start_diff_depth_socket(self, symbol, callback, depth=None):
         socket_name = symbol.lower() + '@depth'
-        return self._start_socket(socket_name, callback)
+        return self._start_socket(socket_name, callback, prefix="ws/")
