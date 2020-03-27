@@ -23,3 +23,9 @@ class Bitstamp_Functions(API_req_creation,Bitstamp):
     def ticker(self, pair):
 
         return self._get('public/ticker/')
+
+class Bitstamp_Web_Functions(Bitstamp, M_SocketManager):
+
+    def __init__(self, api_key = None, private_key = None):
+        Bitstamp.__init__(self, api_key, private_key)
+        M_SocketManager.__init__(self, self.STREAM_URL)

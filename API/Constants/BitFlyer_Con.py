@@ -8,4 +8,4 @@ class BitFlyer(Constant_values):
 
     MARKET = "BitFlyer"
 
-    STREAM_URL = "wss://ws.lightstream.bitflyer.com/json-rpc/"
+    STREAM_URL = "wss://ws.lightstream.bitflyer.com/json-rpc"

@@ -6,6 +6,6 @@ class Bithumb(Constant_values):
     # First we define the URLs
     API_URL = 'https://api.bithumb.{}'.format(tld)
 
-    STREAM_URL = "wss://pubwss.bithumb.com/pub/ws/"
+    STREAM_URL = "wss://global-api.bithumb.pro/message/realtime?subscribe="
 
     MARKET = "Bithumb"

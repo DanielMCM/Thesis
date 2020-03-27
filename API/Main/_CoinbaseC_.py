@@ -1,4 +1,5 @@
 from API.Helpers._Requests_ import API_req_creation
+from API.Helpers._Web_Requests_ import M_SocketManager
 from API.Constants.Coinbase_Con import Coinbase
 
 #-----------------------------------------------
@@ -27,3 +28,10 @@ class Coinbase_Functions(API_req_creation, Coinbase):
             level = '?' + str(level)
 
         return self._get('products/' + p_id + '/book' + level)
+
+
+class Coinbase_Web_Functions(Coinbase, M_SocketManager):
+
+    def __init__(self, api_key = None, private_key = None):
+        Coinbase.__init__(self, api_key, private_key)
+        M_SocketManager.__init__(self, self.STREAM_URL)

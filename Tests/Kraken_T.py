@@ -7,15 +7,6 @@ import time
 #print("We get the first pair!\n")
 #print(a.ticker("BTC", "KRW"))
 
-#print("We get the first pair!\n")
-#print(a.order_book("BTC", "KRW"))
-
-#print("We get the first pair!\n")
-#print(a.History("BTC", "KRW"))
-
-#print("We get the first pair!\n")
-#print(a.index())
-
 a.close()
 
 def process_message(msg):
@@ -28,11 +19,10 @@ def process_message(msg):
 
 b = Web_Client.Bithumb()
 # start any sockets here, i.e a trade socket
-b.start_ticker('BTC-USDT', process_message)
-b.order_book('BTC-USDT', process_message)
-b.trade('BTC-USDT', process_message)
+#b.start_ticker('BTC-USDT', process_message)
 
 b.start()
 print(b.is_alive())
 time.sleep(20)
 b.close()
+

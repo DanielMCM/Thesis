@@ -106,6 +106,7 @@ class M_SocketManager(threading.Thread):
         #if path in self._conns:
         #    return False
         factory_url = self.STREAM_URL + prefix + path
+        print(factory_url)
         factory = M_ClientFactory(factory_url, payload = payload)
         factory.protocol = M_ClientProtocol
         factory.callback = callback
