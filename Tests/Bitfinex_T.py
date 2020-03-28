@@ -56,7 +56,6 @@ b.start_candles('tBTCUSD', process_message)
 b.start_status(process_message)
 
 b.start()
-print(b.is_alive())
+#print(b.is_alive())
 time.sleep(20)
-b.close()
 b.close()

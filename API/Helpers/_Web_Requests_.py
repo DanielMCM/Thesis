@@ -1,168 +1,164 @@
-# coding=utf-8
+# cbpro/WebsocketClient.py
+# original author: Daniel Paquin
+# mongo "support" added by Drew Rice
+#
+#
+# Template object to receive messages from the Coinbase Websocket Feed
 
+from __future__ import print_function
 import json
-import threading
+import base64
+import hmac
+import hashlib
+import time
+from threading import Lock, Thread, Event, currentThread
+from websocket import create_connection, WebSocketConnectionClosedException
+from pymongo import MongoClient
+from cbpro.cbpro_auth import get_auth_headers
 
-from autobahn.twisted.websocket import WebSocketClientFactory, \
-    WebSocketClientProtocol, \
-    connectWS
-from twisted.internet import reactor, ssl
-from twisted.internet.protocol import ReconnectingClientFactory
-from twisted.internet.error import ReactorAlreadyRunning
+class M_SocketManager(object):
+    def __init__(self, url):
+        self.url = url
+        self.cont = True
+        self.error = None
+        self.ws = None
+        self.thread = []
 
-from binance.client import Client
+    def connect_to(self, path, callback, payload = ""):
+        print("PATH = " + path)
+        ws_a = create_connection(path)
+        if payload != "":
+            ws_a.send(payload)
+        t = currentThread()
+        while getattr(t, "do_run", True):   
+            msg =  ws_a.recv()
+            callback(msg)
+            #lock.acquire()
+            #message_list.append(response_a)
+            #lock.release()
+            msg = ""
 
+    def _start_socket(self, path, callback, version = "", prefix = "", **Kwargs):
 
-class M_ClientProtocol(WebSocketClientProtocol):
+        con = self.url
+        if version != "":
+            con += version
+        if prefix != "":
+            con += prefix
+        if path != "":
+            con += path
 
-    def __init__(self, factory, payload=None):
-        super(WebSocketClientProtocol, self).__init__()
-        self.factory = factory
-        self.payload = payload
-        
-
-    def onOpen(self):
-        self.factory.protocol_instance = self
-
-    def onConnect(self, response):
-        if self.payload != "":
-            self.sendMessage(self.payload, isBinary=False)
-        # reset the delay after reconnecting
-        self.factory.resetDelay()
-
-    def onMessage(self, payload, isBinary):
-        if not isBinary:
-            try:
-                payload_obj = json.loads(payload.decode('utf8'))
-            except ValueError:
-                pass
-            else:
-                self.factory.callback(payload_obj)
-
-
-
-
-class M_ReconnectingClientFactory(ReconnectingClientFactory):
-
-    # set initial delay to a short time
-    initialDelay = 0.1
-
-    maxDelay = 10
-
-    maxRetries = 5
-
-
-class M_ClientFactory(WebSocketClientFactory, M_ReconnectingClientFactory):
-
-    def __init__(self, *args, payload=None, **kwargs):
-        WebSocketClientFactory.__init__(self, *args, **kwargs)
-        self.protocol_instance = None
-        self.base_client = None
-        self.payload = payload
-
-    protocol = M_ClientProtocol
-
-    _reconnect_error_payload = {
-        'e': 'error',
-        'm': 'Max reconnect retries reached'
-    }
-
-    def clientConnectionFailed(self, connector, reason):
-        self.retry(connector)
-        if self.retries > self.maxRetries:
-            self.callback(self._reconnect_error_payload)
-
-    def clientConnectionLost(self, connector, reason):
-        self.retry(connector)
-        if self.retries > self.maxRetries:
-            self.callback(self._reconnect_error_payload)
-
-    def buildProtocol(self, addr):
-        return M_ClientProtocol(self, payload = self.payload)
-
-
-class M_SocketManager(threading.Thread):
-
-    WEBSOCKET_DEPTH_5 = '5'
-    WEBSOCKET_DEPTH_10 = '10'
-    WEBSOCKET_DEPTH_20 = '20'
-
-    DEFAULT_USER_TIMEOUT = 30 * 60  # 30 minutes
-
-    def __init__(self, STREAM_URL, user_timeout=DEFAULT_USER_TIMEOUT):
-
-        threading.Thread.__init__(self)
-        self._conns = {}
-        #self._client = client
-        self._user_timeout = user_timeout
-        self._timers = {'user': None, 'margin': None}
-        self._listen_keys = {'user': None, 'margin': None}
-        self._account_callbacks = {'user': None, 'margin': None}
-
-    def _start_socket(self, path, callback, prefix='', **Kwargs):
         payload = ""
         if "payload" in Kwargs:
             payload = json.dumps(Kwargs["payload"], ensure_ascii=False).encode('utf8')
-        #if path in self._conns:
-        #    return False
-        factory_url = self.STREAM_URL + prefix + path
-        print(factory_url)
-        factory = M_ClientFactory(factory_url, payload = payload)
-        factory.protocol = M_ClientProtocol
-        factory.callback = callback
-        factory.reconnect = True
-        factory.params
-        context_factory = ssl.ClientContextFactory()
+        print(con, payload)
+        thr = Thread(target=self.connect_to, args=(con, callback, payload))
+        thr.setDaemon(True)
+        self.thread.append(thr)
 
-        self._conns[path] = connectWS(factory, context_factory)
-        return path
+    def start(self):
+        for t in self.thread:
+            t.start()
+        #for t in self.thread:
+        #    t.join()
 
-    def stop_socket(self, conn_key):
-        """Stop a websocket given the connection key
-        :param conn_key: Socket connection key
-        :type conn_key: string
-        :returns: connection key string if successful, False otherwise
-        """
-        if conn_key not in self._conns:
-            return
-
-        # disable reconnecting if we are closing
-        self._conns[conn_key].factory = WebSocketClientFactory(self.STREAM_URL + 'tmp_path')
-        self._conns[conn_key].disconnect()
-        del(self._conns[conn_key])
-
-        # check if we have a user stream socket
-        if len(conn_key) >= 60 and conn_key[:60] == self._listen_keys['user']:
-            self._stop_account_socket('user')
-
-        # or a margin stream socket
-        if len(conn_key) >= 60 and conn_key[:60] == self._listen_keys['margin']:
-            self._stop_account_socket('margin')
-
-    def _stop_account_socket(self, socket_type):
-        if not self._listen_keys[socket_type]:
-            return
-        if self._timers[socket_type]:
-            self._timers[socket_type].cancel()
-            self._timers[socket_type] = None
-        self._listen_keys[socket_type] = None
-
-    def run(self):
+    def _disconnect(self):
         try:
-            reactor.run(installSignalHandlers=False)
-        except ReactorAlreadyRunning:
-            # Ignore error about reactor already running
+            if self.ws:
+                self.ws.close()
+        except WebSocketConnectionClosedException as e:
             pass
+
+        self.on_close()
+    def on_close(self):
+        print("\n-- Socket Closed --")
 
     def close(self):
-        """Close all connections
-        """
-        keys = set(self._conns.keys())
-        for key in keys:
-            self.stop_socket(key)
+        for th in self.thread:
+            th.do_run = False
 
-        self._conns = {}
+    #def on_open(self):
+    #    if self.should_print:
+    #        print("-- Subscribed! --\n")
+
+    #def on_close(self):
+    #    if self.should_print:
+    #        print("\n-- Socket Closed --")
+
+    #def on_message(self, msg):
+    #    if self.should_print:
+    #        print(msg)
+    #    if self.mongo_collection:  # dump JSON to given mongo collection
+    #        self.mongo_collection.insert_one(msg)
+
+    #def on_error(self, e, data=None):
+    #    self.error = e
+    #    self.stop = True
+    #    print('{} - data: {}'.format(e, data))
+
+
+if __name__ == "__main__":
+    import sys
+    import time
+    import json
+
+    def process_message(msg):
         try:
-            reactor.stop()
+            print("message type: {}".format(msg['e']))
+            print(msg)
         except:
-            pass
+            print("message type: Other")
+            print(msg)
+    #class MyWebsocketClient(M_SocketManager):
+        #def on_open(self):
+        #    self.url = "wss://ws-feed.pro.coinbase.com/"
+        #    self.products = ["BTC-USD", "ETH-USD"]
+        #    print("HEYHEY!")
+        #    self.message_count = 0
+        #    print("Let's count the messages!")
+
+        #def on_message(self, msg):
+        #    print(json.dumps(msg, indent=4, sort_keys=True))
+        #    self.message_count += 1
+
+        #def on_close(self):
+        #    print("-- Goodbye! --")
+
+
+    wsClient = M_SocketManager("wss://ws-feed.pro.coinbase.com/")
+    data = {"payload": {
+                "type": "subscribe",
+                "product_ids": [
+                    "ETH-USD",
+                    "ETH-EUR"
+                ],
+                "channels": [
+                    "level2",
+                    "heartbeat",
+                    {
+                        "name": "ticker",
+                        "product_ids": [
+                            "ETH-BTC",
+                            "ETH-USD"
+                        ]
+                    }
+                ]
+            }}
+    data2 = {
+            "type": "subscribe",
+            "channels": [
+                {
+                    "name": "level2",
+                    "product_ids": [
+                        "ETH-USD"
+                    ]
+                }
+            ]
+        }
+    wsClient._start_socket("",process_message, "", **data)
+    wsClient._start_socket("",process_message, "", **data2)
+    print("Hola?")
+
+    wsClient.start()
+    time.sleep(4)
+    wsClient.close()

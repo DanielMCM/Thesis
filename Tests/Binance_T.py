@@ -98,7 +98,7 @@ b.start_depth_socket('BNBBTC', process_message)
 b.start_diff_depth_socket('BNBBTC', process_message)
 #then start the socket manager
 b.start()
-print(b.is_alive())
+#print(b.is_alive())
 time.sleep(10)
 b.close()
 a.close()

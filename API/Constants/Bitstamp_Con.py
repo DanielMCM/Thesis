@@ -7,4 +7,4 @@ class Bitstamp(Constant_values):
 
     MARKET = "Bitstamp"
 
-    STREAM_URL = "wss://ws.bitstamp.net/"
+    STREAM_URL = "wss://ws.bitstamp.net"

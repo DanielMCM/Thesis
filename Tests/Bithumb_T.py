@@ -33,6 +33,6 @@ b.order_book('BTC-USDT', process_message)
 b.trade('BTC-USDT', process_message)
 
 b.start()
-print(b.is_alive())
+#print(b.is_alive())
 time.sleep(20)
 b.close()

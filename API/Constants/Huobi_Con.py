@@ -7,4 +7,4 @@ class Huobi(Constant_values):
 
     MARKET = "Huobi"
 
-    STREAM_URL = "wss://api.huobi.pro/ws/"
+    STREAM_URL = "wss://api.huobi.pro/ws"
