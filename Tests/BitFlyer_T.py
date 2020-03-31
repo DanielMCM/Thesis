@@ -7,22 +7,22 @@ from twisted.internet import reactor
 api_key = ""
 secret_key = ""
 
-#cl = Client.BitFlyer(api_key, secret_key)
+cl = Client.BitFlyer(api_key, secret_key)
 
-#print("TICKER\n")
-#print(cl.ticker(["BTC_JPY"]))
+print("TICKER\n")
+print(cl.ticker(["BTC_JPY"]))
 
-#print("MARKETS\n")
-#print(cl.markets())
+print("MARKETS\n")
+print(cl.markets())
 
-#print("BOOK\n")
-#print(cl.book(["BTC_JPY"]))
+print("BOOK\n")
+print(cl.book(["BTC_JPY"]))
 
-#print("HISTORY\n")
-#print(cl.history(["BTC_JPY"]))
+print("HISTORY\n")
+print(cl.history(["BTC_JPY"]))
 
-#print("STATUS\n")
-#print(cl.status(["BTC_JPY"]))
+print("STATUS\n")
+print(cl.status(["BTC_JPY"]))
 
 
 # MARKETPLACES

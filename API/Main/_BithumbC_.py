@@ -18,9 +18,13 @@ class Bithumb_Functions(API_req_creation, Bithumb):
     def close(self):
         self.session.close()
 
-    def ticker(self, first, second):
+    def config(self, type = 'config'):
 
-        return self._get('public/ticker/' + first + "_" + second)
+        return self._get('spot/' + type)
+
+    def ticker(self, symbol):
+
+        return self._get('public/ticker/' + symbol)
 
     def order_book(self, first, second):
 

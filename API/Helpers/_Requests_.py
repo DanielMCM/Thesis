@@ -16,9 +16,8 @@ class API_req_creation():
     def _init_session(self):
         # Used sor starting a requests session
         session = requests.session()
-        session.headers.update({'Accept': 'application/json',
-                                'User-Agent': 'binance/python',
-                                'X-MBX-APIKEY': self.API_KEY})
+        session.headers.update({'User-Agent': 'python/api', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive'})
+
         return session
 
     def close(self):
@@ -46,10 +45,11 @@ class API_req_creation():
             # generate signature
             kwargs['data']['timestamp'] = int(time.time() * 1000)
             kwargs['data']['signature'] = self._generate_signature(kwargs['data'])
-        print(uri)
-        print(kwargs)
+        #print(uri)
+        #print(kwargs)
         self.response = getattr(self.session, method)(uri, **kwargs)
-        print(self.response)
+        #self.response = getattr(self.session, method)(uri, **kwargs)
+        #print(self.response)
         return self._handle_response()
 
 

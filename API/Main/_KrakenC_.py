@@ -20,9 +20,9 @@ class Kraken_Functions(API_req_creation,Kraken):
     def close(self):
         self.session.close()
 
-    def ticker(self):
+    def ticker(self, symbol):
 
-        return self._get('0/public/Ticker')
+        return self._get('0/public/Ticker?pair=' + symbol)
 
     def time(self):
 
@@ -36,11 +36,11 @@ class Kraken_Functions(API_req_creation,Kraken):
 
         return self._get('0/public/AssetPairs')
 
-    def Depth(self, pair, count = 20):
+    def Depth(self, pair, count = "20"):
 
-        return self._get('0/public/Depth?pair=' + pair + "&count=" + interval)
+        return self._get('0/public/Depth?pair=' + pair + "&count=" + count)
 
-    def OHLC(self, pair, interval = 1):
+    def OHLC(self, pair, interval = "1"):
 
         return self._get('0/public/OHLC?pair=' + pair + "&interval=" + interval)
 
@@ -70,7 +70,7 @@ class Kraken_Web_Functions(Kraken, M_SocketManager):
                 }
         return self._start_socket("", callback, "", **{"payload":data})
 
-    def start_OHLC(self, symbol):
+    def start_OHLC(self, symbol, callback):
         data = {
                   "event": "subscribe",
                   "pair": [
@@ -82,7 +82,7 @@ class Kraken_Web_Functions(Kraken, M_SocketManager):
                 }
         return self._start_socket("", callback, "", **{"payload":data})
 
-    def start_trade(self, symbol):
+    def start_trade(self, symbol, callback):
         data = {
                   "event": "subscribe",
                   "pair": [
@@ -94,7 +94,7 @@ class Kraken_Web_Functions(Kraken, M_SocketManager):
                 }
         return self._start_socket("", callback, "", **{"payload":data})
 
-    def start_book(self, symbol):
+    def start_book(self, symbol, callback):
         data = {
                   "event": "subscribe",
                   "pair": [
@@ -106,7 +106,7 @@ class Kraken_Web_Functions(Kraken, M_SocketManager):
                 }
         return self._start_socket("", callback, "", **{"payload":data})
 
-    def start_spread(self, symbol):
+    def start_spread(self, symbol, callback):
         data = {
                   "event": "subscribe",
                   "pair": [

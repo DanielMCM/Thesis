@@ -5,7 +5,10 @@ import time
 #a = Client.Bithumb()
 
 #print("We get the first pair!\n")
-#print(a.ticker("BTC", "KRW"))
+#print(a.ticker("BTC_KRW"))
+
+#print("We get the first pair!\n")
+#print(a.config())
 
 #print("We get the first pair!\n")
 #print(a.order_book("BTC", "KRW"))
