@@ -24,9 +24,9 @@ class BitFlyer_Functions(API_req_creation,BitFlyer):
 
         return self._get('ticker', **{"params": {"product_code": symbol}})
 
-    def markets(self):
+    def markets(self, location = ""):
 
-        return self._get('getmarkets')
+        return self._get('getmarkets' + location)
 
     def book(self, symbol):
 

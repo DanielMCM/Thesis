@@ -32,9 +32,16 @@ for symbol in Bitfinex.configs()[0]:
 for symbol in BitFlyer.markets():
     list.append(["BitFlyer", symbol["product_code"]])
 
-for symbol, data in Bithumb.ticker("ALL")["data"].items():
-    if symbol != "date":
-        list.append(["Bithumb", symbol + "_" + "KRW"])
+for symbol in BitFlyer.markets("/usa"):
+    list.append(["BitFlyer", symbol["product_code"]])
+
+for symbol in BitFlyer.markets("/eu"):
+    list.append(["BitFlyer", symbol["product_code"]])
+
+for symbol, data in Bithumb.config()["data"].items():
+    if symbol == "spotConfig":
+        for element in data:
+            list.append(["Bithumb", element["symbol"]])
 
 for symbol in Bitstamp.pairs_info():
     list.append(["Bitstamp", symbol["name"]])
