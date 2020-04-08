@@ -31,7 +31,7 @@ class M_SocketManager(object):
             ws_a.send(payload)
         t = currentThread()
         while getattr(t, "do_run", True):   
-            msg =  ws_a.recv()
+            msg =  json.loads(ws_a.recv())
             callback(msg)
             #lock.acquire()
             #message_list.append(response_a)
