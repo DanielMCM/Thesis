@@ -106,7 +106,7 @@ class Coinbase_Web_Functions(Coinbase, M_SocketManager):
             "type": "subscribe",
             "channels": [
                 {
-                    "name": "matches",
+                    "name": "full",
                     "product_ids": [
                         symbol
                     ]
