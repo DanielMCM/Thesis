@@ -3,7 +3,7 @@ from API.Constants.General import Constant_values
 class Huobi(Constant_values):
 
     # First we define the URLs
-    API_URL = 'http://api.testnet.huobi.pro'
+    API_URL = 'http://api.huobi.pro'
 
     MARKET = "Huobi"
 

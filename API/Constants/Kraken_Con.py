@@ -7,4 +7,4 @@ class Kraken(Constant_values):
 
     MARKET = "Kraken"
 
-    STREAM_URL = "wss.kraken.com"
+    STREAM_URL = "wss://ws.kraken.com"

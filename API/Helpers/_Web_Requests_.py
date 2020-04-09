@@ -15,6 +15,7 @@ from threading import Lock, Thread, Event, currentThread
 from websocket import create_connection, WebSocketConnectionClosedException
 from pymongo import MongoClient
 from cbpro.cbpro_auth import get_auth_headers
+import gzip
 
 class M_SocketManager(object):
     def __init__(self, url):
@@ -26,13 +27,33 @@ class M_SocketManager(object):
 
     def connect_to(self, path, callback, payload = ""):
         print("PATH = " + path)
-        ws_a = create_connection(path)
+        try:
+            ws_a = create_connection(path)
+        except:
+            print("Connection not created!!")
         if payload != "":
             ws_a.send(payload)
         t = currentThread()
-        while getattr(t, "do_run", True):   
-            msg =  json.loads(ws_a.recv())
-            callback(msg)
+        while getattr(t, "do_run", True): 
+            try:
+                msg =  json.loads(ws_a.recv())
+                callback(msg)
+            except:
+                try:
+                    msg = json.loads(gzip.decompress(ws_a.recv()).decode())
+                    if 'ping' in msg:
+                        data = {
+                            "pong": msg['ping']
+                        }
+                        data = json.dumps(data).encode()
+                        print("Sending Message:")
+                        ws_a.send(data)
+                    callback(msg)
+                except:
+                    ws_a = create_connection(path)
+                    if payload != "":
+                        ws_a.send(payload)
+
             #lock.acquire()
             #message_list.append(response_a)
             #lock.release()

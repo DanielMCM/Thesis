@@ -95,14 +95,15 @@ class Kraken_Web_Functions(Kraken, M_SocketManager):
         return self._start_socket("", callback, "", **{"payload":data})
 
     def start_book(self, symbol, callback):
+
         data = {
                   "event": "subscribe",
-                  "pair": [
-                    symbol
-                  ],
                   "subscription": {
                     "name": "book"
-                  }
+                  },
+                  "pair": [
+                    symbol
+                  ]
                 }
         return self._start_socket("", callback, "", **{"payload":data})
 

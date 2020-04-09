@@ -2,36 +2,39 @@ from API.Main.Client import Client, Web_Client
 from datetime import datetime
 import time
 
-#a = Client.Bithumb()
+a = Client.Huobi()
 
-print("We get the first pair!\n")
+print("We get the first pair!1\n")
+print(a.close())
+
+print("We get the first pair!2\n")
 print(a.ticker())
 
-print("We get the first pair!\n")
-print(a.kline("BTCUSD"))
+print("We get the first pair!3 \n")
+print(a.Kline("btcusdt"))
 
-print("We get the first pair!\n")
-print(a.aggticker("BTCUSD"))
+print("We get the first pair! 4\n")
+print(a.aggticker("btcusdt"))
 
-print("We get the first pair!\n")
-print(a.depth("BTCUSD"))
+print("We get the first pair! 5\n")
+print(a.depth("btcusdt"))
 
-print("We get the first pair!\n")
-print(a.trade("BTCUSD"))
+print("We get the first pair!6\n")
+print(a.trade("btcusdt"))
 
-print("We get the first pair!\n")
+print("We get the first pair!7\n")
 print(a.symbols())
 
-print("We get the first pair!\n")
-print(a.history("BTCUSD"))
+print("We get the first pair!8\n")
+print(a.history("btcusdt"))
 
-print("We get the first pair!\n")
-print(a.summary_24h("BTCUSD"))
+print("We get the first pair!9\n")
+print(a.summary_24h("btcusdt"))
 
-print("We get the first pair!\n")
+print("We get the first pair!10\n")
 print(a.currencies())
 
-print("We get the first pair!\n")
+print("We get the first pair!11\n")
 print(a.time())
 
 
@@ -45,12 +48,14 @@ def process_message(msg):
         print("message type: Other")
         print(msg)
 
-b = Web_Client.Bithumb()
+b = Web_Client.Huobi()
 # start any sockets here, i.e a trade socket
-b.start_candle('BTC-USDT', process_message)
-b.start_depth('BTC-USDT', process_message)
-b.start_bid_offer('BTC-USDT', process_message)
-b.start_24h('BTC-USDT', process_message)
+#b.start_candle('btcusdt', process_message)
+#b.start_by_price('btcusdt', process_message)
+#b.start_depth('btcusdt', process_message)
+#b.start_bid_offer('btcusdt', process_message)
+#b.start_24h('btcusdt', process_message)
+b.start_trade('btcusdt', process_message)
 
 
 

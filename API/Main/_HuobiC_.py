@@ -26,15 +26,15 @@ class Huobi_Functions(API_req_creation,Huobi):
 
     def Kline(self, symbol, period = "1day", size = 200):
 
-        return self._get('market/history/kline?symbol=' + symbol + '&period=' + period + '&size=' + size)
+        return self._get('market/history/kline?symbol=' + symbol + '&period=' + period + '&size=' + str(size))
 
     def aggticker(self, symbol):
 
         return self._get('market/detail/merged?symbol=' + symbol)
 
-    def depth(self, symbol, type = 20, depth = "step0"):
+    def depth(self, symbol, depth = 20, type = "step0"):
 
-        return self._get('market/depth?symbol=' + symbol + '&type=' + type + '&depth=' + depth)
+        return self._get('market/depth?symbol=' + symbol + '&type=' + type + '&depth=' + str(depth))
 
     def trade(self, symbol):
 
@@ -46,7 +46,7 @@ class Huobi_Functions(API_req_creation,Huobi):
 
     def history(self, symbol, size = 1):
 
-        return self._get('market/history/trade?symbol=' + symbol + "&size=" + size)
+        return self._get('market/history/trade?symbol=' + symbol + "&size=" + str(size))
 
     def summary_24h(self, symbol):
 
@@ -73,9 +73,16 @@ class Huobi_Web_Functions(Huobi, M_SocketManager):
                 }
         return self._start_socket("", callback, "", **{"payload":data})
 
-    def start_depth(self, symbol, callback, levels = 150):
+    def start_depth(self, symbol, callback, type = "step0"):
         data = {
-                  "sub": "market." + symbol + ".mbp." + period,
+                  "sub": "market." + symbol + ".depth." + type,
+                  "id": "id1"
+                }
+        return self._start_socket("", callback, "", **{"payload":data})
+
+    def start_by_price(self, symbol, callback, levels = 150):
+        data = {
+                  "sub": "market." + symbol + ".mbp." + str(levels),
                   "id": "id1"
                 }
         return self._start_socket("", callback, "", **{"payload":data})
@@ -90,6 +97,13 @@ class Huobi_Web_Functions(Huobi, M_SocketManager):
     def start_24h(self, symbol, callback, levels = 150):
         data = {
                   "sub": "market." + symbol + ".detail",
+                  "id": "id1"
+                }
+        return self._start_socket("", callback, "", **{"payload":data})
+
+    def start_trade(self, symbol, callback):
+        data = {
+                  "sub": "market." + symbol + ".trade.detail",
                   "id": "id1"
                 }
         return self._start_socket("", callback, "", **{"payload":data})
