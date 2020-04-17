@@ -31,6 +31,7 @@ class M_SocketManager(object):
             ws_a = create_connection(path)
         except:
             print("Connection not created!!")
+            print(path)
         if payload != "":
             ws_a.send(payload)
         t = currentThread()
@@ -73,6 +74,7 @@ class M_SocketManager(object):
         if "payload" in Kwargs:
             payload = json.dumps(Kwargs["payload"], ensure_ascii=False).encode('utf8')
         print(con, payload)
+        print("HEY!")
         thr = Thread(target=self.connect_to, args=(con, callback, payload))
         thr.setDaemon(True)
         self.thread.append(thr)
