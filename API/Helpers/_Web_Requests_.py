@@ -61,7 +61,6 @@ class M_SocketManager(object):
             msg = ""
 
     def _start_socket(self, path, callback, version = "", prefix = "", **Kwargs):
-
         con = self.url
         if version != "":
             con += version
