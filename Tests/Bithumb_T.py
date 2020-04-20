@@ -32,8 +32,8 @@ def process_message(msg):
 b = Web_Client.Bithumb()
 # start any sockets here, i.e a trade socket
 b.start_ticker('BTC-USDT', process_message)
-b.order_book('BTC-USDT', process_message)
-b.trade('BTC-USDT', process_message)
+b.start_order_book('BTC-USDT', process_message)
+b.start_trade('BTC-USDT', process_message)
 
 b.start()
 #print(b.is_alive())

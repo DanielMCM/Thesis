@@ -48,10 +48,10 @@ class Bithumb_Web_Functions(Bithumb, M_SocketManager):
 
         return self._start_socket("TICKER:" + symbol, callback)
 
-    def order_book(self, symbol, callback):
+    def start_order_book(self, symbol, callback):
 
         return self._start_socket("ORDERBOOK:" + symbol, callback)
 
-    def trade(self, symbol, callback):
+    def start_trade(self, symbol, callback):
 
         return self._start_socket("TRADE:" + symbol, callback)

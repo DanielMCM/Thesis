@@ -94,11 +94,12 @@ class Kraken_Web_Functions(Kraken, M_SocketManager):
                 }
         return self._start_socket("", callback, "", **{"payload":data})
 
-    def start_book(self, symbol, callback):
+    def start_book(self, symbol, callback, depth = 500):
 
         data = {
                   "event": "subscribe",
                   "subscription": {
+                    "depth": depth,
                     "name": "book"
                   },
                   "pair": [

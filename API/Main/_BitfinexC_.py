@@ -96,7 +96,7 @@ class Bitfinex_Web_Functions(Bitfinex, M_SocketManager):
         }
         return self._start_socket("", callback, "", **{"payload":data})
 
-    def start_raw_book(self, symbol, callback, precision = "P0", length = 25):
+    def start_raw_book(self, symbol, callback, precision = "R0", length = 100):
         data = {
             'event': 'subscribe',
             'channel': 'book',
