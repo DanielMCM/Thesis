@@ -1,4 +1,4 @@
-from influxdb import InfluxDBClient
+from influxdb import DataFrameClient
 from API.Main.Client import Web_Client, Client
 from Database.Functions.Helpers import *
 from functools import partial
@@ -10,7 +10,7 @@ from datetime import datetime
 ##GLOBAL VARIABLES DO NOT WORK ACROSS MODULES/FILES
 
 def process_message(msg, exchange, pair):
-    global df
+    global df, client
     try:
         if exchange == "Binance":
             t = BinanceToTime(msg["T"])
@@ -25,18 +25,19 @@ def process_message(msg, exchange, pair):
                 d = pd.DataFrame({ "t": [t], 
                     "Host": [exchange], 
                     "Pair": [pair],
-                    "Write_Time": [BinanceToTime(int(round(time.time() * 1000)))],
+                    "Write_Time": [BinanceToTime_string(int(round(time.time() * 1000)))],
                     "Price":[p]
                 })
-                df = df.append(d)  
+                df = df.append(d)
         elif exchange == "Bithumb":
-            t = timestampToTime(msg["data"]["t"])
+            t = BinanceToTime(msg["data"]["t"]*1000)
             p = float(msg["data"]["p"])
         elif exchange == "Bitstamp":
-            t = timestampToTime(msg["data"]["timestamp"])
+            t = BinanceToTime(msg["data"]["timestamp"]*1000)
             p = float(msg["data"]["price"])
         elif exchange == "Coinbase":
-            t = datetime.strptime(msg["time"],"%Y-%m-%dT%H:%M:%S.%fZ").strftime('%Y-%m-%d %H:%M:%S.%f')
+            t = datetime.strptime(msg["time"],"%Y-%m-%dT%H:%M:%S.%fZ")
+            #.strftime('%Y-%m-%d %H:%M:%S.%f')
             p = float(msg["price"])
         elif exchange == "Huobi":
             t = BinanceToTime(msg["tick"]["data"][0]["ts"])
@@ -44,17 +45,25 @@ def process_message(msg, exchange, pair):
         elif exchange == "Kraken":
             t = BinanceToTime(int(round(float(msg[1][0][2])*1000)))
             p = float(msg[1][0][0])
+
         if exchange != "BitFlyer":
             d = pd.DataFrame({ "t": [t], 
                     "Host": [exchange], 
                     "Pair": [pair],
-                    "Write_Time": [BinanceToTime(int(round(time.time() * 1000)))],
+                    "Write_Time": [BinanceToTime_string(int(round(time.time() * 1000)))],
                     "Price":[p]
                 })
             df = df.append(d)  
+
+
         #print(d)
     except:
-        print("message type: Other")
+        if msg["event"] in ["info", "subscribed"] or msg["event"] =='bts:subscription_succeeded' or msg["code"] in ["00002", "00001"] \
+           or msg["type"] == "subscriptions" or msg["method"] == "subscribe":
+            pass
+        else:
+            print(msg)
+            print("MARKET - message type: Other - Market: " + exchange)
 
 def process_message_2(msg, exchange, pair):
     global df_dif, df_Book
@@ -187,29 +196,46 @@ def process_message_2(msg, exchange, pair):
                     "Asks":[asks]
                 })
             df_dif = df_dif.append(d)
-        #print("YESYES!!")
-        #print(d)
     except:
-        print(msg)
-        print("message type: Other")
+        if msg["event"] in ["info", "subscribed"] or msg["event"] =='bts:subscription_succeeded' or msg["code"] in ["00002", "00001"] \
+           or msg["type"] == "subscriptions" or msg["method"] == "subscribe":
+            pass
+        else:
+            print(msg)
+            print("MARKET - message type: Other - Market: " + exchange)
 
 def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
-    global dummy
-    dummy = 10
-    if type == "Ticker":
-        global df
-        df = pd.DataFrame(columns = ["t", "Host", "Pair", "Event_Time", "Write_Time", "Price"])
+    global client, df_Book, df_dif, df
+
+    #if type == "Ticker":
+    #    global df
+    #    df = pd.DataFrame(columns = ["t", "Host", "Pair", "Event_Time", "Write_Time", "Price"])
+    #elif type == "Book":
+    #    global df_Book, df_dif
+    #    df_Book = pd.DataFrame(columns = ["t_recorded","Host","Pair","LastUpdateID","Bids","Asks"])
+    #    df_dif = pd.DataFrame(columns = ["t_recorded", "Host", "Pair", "Seg", "Bids", "Asks"])
+    #else:
+    df_Book = pd.DataFrame(columns = ["t_recorded","Host","Pair","LastUpdateID","Bids","Asks"])
+    df_dif = pd.DataFrame(columns = ["t_recorded", "Host", "Pair", "Seg", "Bids", "Asks"])
+    df = pd.DataFrame(columns = ["t", "Host", "Pair", "Event_Time", "Write_Time", "Price"])
+
+    client = DataFrameClient('localhost', 8086, 'root', 'root')
+
+    #if dbname not in client.get_list_database():
+    #    client.create_database(dbname)
+    #else:
+    #    client.drop_database(dbname)
+    #    client.create_database(dbname)
+    if "Markets" not in client.get_list_database():
+        client.create_database("Markets")
     else:
-        global df_Book, df_dif
-        df_Book = pd.DataFrame(columns = ["t_recorded","Host","Pair","LastUpdateID","Bids","Asks"])
-        df_dif = pd.DataFrame(columns = ["t_recorded", "Host", "Pair", "Seg", "Bids", "Asks"])
-
-    client = InfluxDBClient('localhost', 8086, 'root', 'root')
-
-    if dbname not in client.get_list_database():
-        client.create_database(dbname)
-
-    #client = InfluxDBClient('localhost', 8086, 'root', 'root', dbname)
+        client.drop_database("Markets")
+        client.create_database("Markets")
+    #if "difBook" not in client.get_list_database():
+    #    client.create_database("difBook")
+    #else:
+    #    client.drop_database("difBook")
+    #    client.create_database("difBook")
 
     Binance = Web_Client.Binance()
     Binance_REST = Client.Binance()
@@ -227,20 +253,20 @@ def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
     Huobi = Web_Client.Huobi()
     Kraken = Web_Client.Kraken()
 
-    if type == "Ticker":
+    if type == "Ticker" or type == "all":
         Binance.start_trade_socket('ethbtc', partial(process_message,exchange = "Binance", pair = "ethbtc"))
         Bitfinex.start_trades("tETHBTC", partial(process_message,exchange = "Bitfinex", pair = "ethbtc"))
-        BitFlyer.start_executions("BTC_JPY", partial(process_message,exchange = "BitFlyer", pair = "ethbtc"))
+        BitFlyer.start_executions("ETH_BTC", partial(process_message,exchange = "BitFlyer", pair = "ethbtc"))
         Bithumb.start_trade('ETH-BTC', partial(process_message,exchange = "Bithumb", pair = "ethbtc"))
         Bitstamp.start_ticker('ethbtc', partial(process_message,exchange = "Bitstamp", pair = "ethbtc"))
         Coinbase.start_matches('ETH-BTC', partial(process_message,exchange = "Coinbase", pair = "ethbtc"))
         Huobi.start_trade('ethbtc', partial(process_message,exchange = "Huobi", pair = "ethbtc"))
         Kraken.start_trade('ETH/XBT', partial(process_message,exchange = "Kraken", pair = "ethbtc"))
-    elif type == "Book":
+    if type == "Book" or type == "all":
         Binance.start_depth_socket("ethbtc",partial(process_message_2,exchange = "Binance", pair = "ethbtc"))
         Bitfinex.start_raw_book("tETHBTC", partial(process_message_2,exchange = "Bitfinex", pair = "ethbtc"))
-        BitFlyer.start_book("BTC_JPY", partial(process_message_2,exchange = "BitFlyer", pair = "ethbtc"))
-        BitFlyer2.start_book_updates("BTC_JPY", partial(process_message_2,exchange = "BitFlyer", pair = "ethbtc"))
+        BitFlyer.start_book("ETH_BTC", partial(process_message_2,exchange = "BitFlyer", pair = "ethbtc"))
+        BitFlyer2.start_book_updates("ETH_BTC", partial(process_message_2,exchange = "BitFlyer", pair = "ethbtc"))
         Bithumb.start_order_book('ETH-BTC', partial(process_message_2,exchange = "Bithumb", pair = "ethbtc"))
         Bitstamp2.start_liveFull('ethbtc', partial(process_message_2,exchange = "Bitstamp", pair = "ethbtc"))
         Bitstamp.start_orderBook('ethbtc', partial(process_message_2,exchange = "Bitstamp", pair = "ethbtc"))
@@ -263,7 +289,8 @@ def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
         time.sleep(10)
         print(df)
     else:
-        for i in range(1):
+        print("START FIRST LOOP")
+        for i in range(6):
             _msg_ = Binance_REST.depth("ETHBTC", limit = 1000)
             d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
                         "Host": ["Binance"], 
@@ -273,11 +300,33 @@ def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
                         "Asks":[_msg_["asks"]]
                     })
             df_Book = df_Book.append(d_2)
-            time.sleep(5)
+            time.sleep(10)
         BitFlyer.close()
         Bitstamp.close()
+    time.sleep(240)
+    for i in range(5):
+        df_temp = df
+        df_dif_temp = df_dif
+        df_Book_temp = df_Book
 
-    time.sleep(5)
+        df_temp = df_temp.set_index("t")
+        df_dif_temp = df_dif_temp.set_index("t_recorded")
+        df_Book_temp = df_Book_temp.set_index("t_recorded")
+        print(df_temp.index)
+        print(isinstance(df_temp.index, pd.DatetimeIndex))
+        print(df_temp)
+        print("WRITING " + str(len(df_temp)) + " lines in Markets : " + str(BinanceToTime(int(round(time.time() * 1000)))))
+        client.write_points(df_temp,"Price", time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
+        df = df.iloc[len(df_temp):]
+        print("WRITING " + str(len(df_dif_temp)) + " lines in difBook : " + str(BinanceToTime(int(round(time.time() * 1000)))))
+        client.write_points(df_dif_temp,"difBook",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
+        df_dif = df_dif.iloc[len(df_dif_temp):]
+
+        print("WRITING " + str(len(df_Book_temp)) + " lines in Book : " + str(BinanceToTime(int(round(time.time() * 1000)))))
+        client.write_points(df_Book_temp,"Book",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
+        df_Book = df_Book.iloc[len(df_Book_temp):]
+
+        time.sleep(300)
 
     Bitfinex.close()
     BitFlyer2.close()
@@ -287,8 +336,10 @@ def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
     Huobi.close()
     Kraken.close()
 
-    print(df_Book)
-    print(df_dif)
+    client.write_points(df_Book, "Book", "line")
+    client_Markets.write_points(df, "Markets", "line")
+    client.write_points(df_dif, "difBook", "line")
+    print("..END..")
 
 #loadPair("ETH", "BTC", 50, "Market", "Ticker")
 

@@ -26,12 +26,13 @@ class M_SocketManager(object):
         self.thread = []
 
     def connect_to(self, path, callback, payload = ""):
-        print("PATH = " + path)
+        #print("PATH = " + path)
         try:
             ws_a = create_connection(path)
-        except:
+        except WebSocketConnectionClosedException as e:
             print("Connection not created!!")
             print(path)
+            print(e)
         if payload != "":
             ws_a.send(payload)
         t = currentThread()
@@ -51,9 +52,9 @@ class M_SocketManager(object):
                         ws_a.send(data)
                     callback(msg)
                 except:
-                    ws_a = create_connection(path)
-                    if payload != "":
-                        ws_a.send(payload)
+                    ws_a.close()
+                    time.sleep(5)
+                    self.connect_to(path, callback, payload)
 
             #lock.acquire()
             #message_list.append(response_a)
@@ -72,8 +73,7 @@ class M_SocketManager(object):
         payload = ""
         if "payload" in Kwargs:
             payload = json.dumps(Kwargs["payload"], ensure_ascii=False).encode('utf8')
-        print(con, payload)
-        print("HEY!")
+        #print(con, payload)
         thr = Thread(target=self.connect_to, args=(con, callback, payload))
         thr.setDaemon(True)
         self.thread.append(thr)

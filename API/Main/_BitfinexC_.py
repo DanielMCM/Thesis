@@ -82,7 +82,6 @@ class Bitfinex_Web_Functions(Bitfinex, M_SocketManager):
             'channel': 'trades',
             'symbol': symbol,
         }
-        print("Entro en trades")
         return self._start_socket("", callback, "", **{"payload":data})
 
     def start_book(self, symbol, callback, precision = "P0", frequency = "F0", length = 25):
