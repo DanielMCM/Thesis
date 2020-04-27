@@ -11,7 +11,9 @@ import base64
 import hmac
 import hashlib
 import time
+import ast
 from threading import Lock, Thread, Event, currentThread
+
 from websocket import create_connection, WebSocketConnectionClosedException
 from pymongo import MongoClient
 from cbpro.cbpro_auth import get_auth_headers
@@ -29,37 +31,65 @@ class M_SocketManager(object):
         #print("PATH = " + path)
         try:
             ws_a = create_connection(path)
-        except WebSocketConnectionClosedException as e:
+        except Exception as e:
             print("Connection not created!!")
             print(path)
             print(e)
+            print("Reconnecting...")
+            time.sleep(5)
+            self.connect_to(path, callback, payload)
         if payload != "":
             ws_a.send(payload)
         t = currentThread()
         while getattr(t, "do_run", True): 
             try:
-                msg =  json.loads(ws_a.recv())
+                pre_msg =  ws_a.recv()
+                msg = json.loads(pre_msg)
                 callback(msg)
-            except:
+            except WebSocketConnectionClosedException as e:
+                print("Connection not created!!")
+                print(path)
+                print(e)
+                print("Reconnecting...")
+                time.sleep(5)
+                self.connect_to(path, callback, payload)
+            except Exception as e:
                 try:
-                    msg = json.loads(gzip.decompress(ws_a.recv()).decode())
+                    msg = json.loads(gzip.decompress(pre_msg).decode())
                     if 'ping' in msg:
                         data = {
-                            "pong": msg['ping']
+                            "pong": msg['ping'] 
                         }
                         data = json.dumps(data).encode()
-                        print("Sending Message:")
                         ws_a.send(data)
                     callback(msg)
-                except:
+                except TypeError:
+                    if pre_msg == "" or msg == "":
+                        try:
+                            data = {"code":"0","msg":"pong"}
+                            data = json.dumps(data).encode()
+                            ws_a.send(data)
+                except Exception as e2:
+                    print("PRIMERO")
+                    print(type(e))
+                    print(e.args)
+                    print(e)
+                    print("SEGUNDO! " + path)
+                    print(type(e2))
+                    print(e2.args)
+                    print(e2)
+                    print(pre_msg)
+                    print("RECONNECTING")
+                    print(msg)
+                    print(type(msg))
+                    print(msg == "")
                     ws_a.close()
-                    time.sleep(5)
-                    self.connect_to(path, callback, payload)
 
             #lock.acquire()
             #message_list.append(response_a)
             #lock.release()
             msg = ""
+            pre_msg = ""
 
     def _start_socket(self, path, callback, version = "", prefix = "", **Kwargs):
         con = self.url

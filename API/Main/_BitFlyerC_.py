@@ -71,14 +71,12 @@ class BitFlyer_Web_Functions(BitFlyer, M_SocketManager):
         data = {'method' : 'subscribe',
             'params' : {'channel' : "lightning_ticker_" + symbol}
             }
-        print(data)
         return self._start_socket("", callback, "", **{"payload":data})
 
     def start_executions(self, symbol, callback):
         data = {'method' : 'subscribe',
             'params' : {'channel' : "lightning_executions_" + symbol}
             }
-        print(data)
         return self._start_socket("", callback, "", **{"payload":data})
 
 
