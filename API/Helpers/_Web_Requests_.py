@@ -41,8 +41,21 @@ class M_SocketManager(object):
         if payload != "":
             ws_a.send(payload)
         t = currentThread()
+        bittime = time.time()
+        pingsend = "wss://global-api.bithumb.pro" in path
+        pingsend2 = "wss://ws.kraken.com" in path
         while getattr(t, "do_run", True): 
             try:
+                if  pingsend and time.time()-bittime > 5:
+                    bittime = time.time()
+                    data = {"cmd":"ping"}
+                    data = json.dumps(data).encode()
+                    ws_a.send(data)
+                elif pingsend2 and time.time() - bittime > 30:
+                    bittime = time.time()
+                    data = {"event": "ping", "reqid": 42}
+                    data = json.dumps(data).encode()
+                    ws_a.send(data)
                 pre_msg =  ws_a.recv()
                 msg = json.loads(pre_msg)
                 callback(msg)
@@ -65,10 +78,8 @@ class M_SocketManager(object):
                     callback(msg)
                 except TypeError:
                     if pre_msg == "" or msg == "":
-                        try:
-                            data = {"code":"0","msg":"pong"}
-                            data = json.dumps(data).encode()
-                            ws_a.send(data)
+                        print("Passing " + path)
+                        pass
                 except Exception as e2:
                     print("PRIMERO")
                     print(type(e))

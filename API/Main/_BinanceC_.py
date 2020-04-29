@@ -119,5 +119,5 @@ class Binance_Web_Functions(Binance, M_SocketManager):
         return self._start_socket(socket_name, callback, prefix="ws/")
 
     def start_diff_depth_socket(self, symbol, callback, depth=None):
-        socket_name = symbol.lower() + '@depth'
+        socket_name = symbol.lower() + '@depth@100ms'
         return self._start_socket(socket_name, callback, prefix="ws/")

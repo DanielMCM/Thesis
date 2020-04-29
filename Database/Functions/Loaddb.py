@@ -4,7 +4,7 @@ from Database.Functions.Helpers import *
 from functools import partial
 import time
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 ##TODO IF TIME --> CREATE CONFIG FILE WITH CLASS CONTAINING DFs TO MOVE PROCESS_MESSAGES TO OTHER FILES
 ##GLOBAL VARIABLES DO NOT WORK ACROSS MODULES/FILES
@@ -15,14 +15,17 @@ def nothing(msg):
 def process_message(msg, exchange, pair):
     global df, client
     try:
+        add = 1
         if exchange == "Binance":
             t = BinanceToTime(msg["T"])
             p = float(msg["p"])
             Q = float(msg["q"])
         elif exchange == "Bitfinex" and type(msg) == type([]):
             if  msg[1] != "tu":
-                if len(msg)>2:
+                if len(msg)>2 and type(msg[2][0]) == type([]):
                     l = msg[2]
+                elif len(msg)>2:
+                    l = [msg[2]]
                 else: 
                     l = msg[1]
                 for element in l:
@@ -42,8 +45,7 @@ def process_message(msg, exchange, pair):
             if type(msg["params"]["message"][0]) == type([]):
                 # This probably can be deleted
                 for element in msg["params"]["message"][0]:
-                    print("MULTITUD!")
-                    t = datetime.strptime(element["exec_date"][:26],"%Y-%m-%dT%H:%M:%S.%f")
+                    t = datetime.strptime(element["exec_date"][:26],"%Y-%m-%dT%H:%M:%S.%f") + timedelta(hours = 2)
                     p = float(element["price"])
                     Q = float(element["size"])
                     d = pd.DataFrame({ "t": [t], 
@@ -55,7 +57,7 @@ def process_message(msg, exchange, pair):
                         })
                     df = df.append(d)
             else:
-                t = datetime.strptime(msg["params"]["message"][0]["exec_date"][:26],"%Y-%m-%dT%H:%M:%S.%f")
+                t = datetime.strptime(msg["params"]["message"][0]["exec_date"][:26],"%Y-%m-%dT%H:%M:%S.%f") + timedelta(hours = 2)
                 p = float(msg["params"]["message"][0]["price"])
                 Q = float(msg["params"]["message"][0]["size"])
                 d = pd.DataFrame({ "t": [t], 
@@ -67,7 +69,6 @@ def process_message(msg, exchange, pair):
                     })
                 
                 df = df.append(d)
-            print("PASSED!!!")
         elif exchange == "Bithumb":
             if msg["code"] == "00006":
                 for element in msg["data"]:
@@ -82,6 +83,7 @@ def process_message(msg, exchange, pair):
                         "Q": Q
                     })
                     df = df.append(d)
+                    add = 0
             else:
                 t = BinanceToTime(int(msg["data"]["t"])*1000)
                 p = float(msg["data"]["p"])
@@ -91,7 +93,7 @@ def process_message(msg, exchange, pair):
             p = float(msg["data"]["price"])
             Q = float(msg["data"]["amount"])
         elif exchange == "Coinbase":
-            t = datetime.strptime(msg["time"],"%Y-%m-%dT%H:%M:%S.%fZ")
+            t = datetime.strptime(msg["time"],"%Y-%m-%dT%H:%M:%S.%fZ")  + timedelta(hours = 2)
             #.strftime('%Y-%m-%d %H:%M:%S.%f')
             p = float(msg["price"])
             Q = float(msg["size"])
@@ -104,7 +106,7 @@ def process_message(msg, exchange, pair):
             p = float(msg[1][0][0])
             Q = float(msg[1][0][1])
 
-        if exchange not in ["BitFlyer", "Bitfinex", "Bithumb"]:
+        if exchange not in ["BitFlyer", "Bitfinex"] and add == 1:
             d = pd.DataFrame({ "t": [t], 
                     "Host": [exchange], 
                     "Pair": [pair],
@@ -302,7 +304,7 @@ def process_message_2(msg, exchange, pair):
                 print(msg)
                 print("MARKET - message type: Other - Market: " + exchange)
 
-def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
+def loadPair(Pairs,time_wait, dbname, type):
     global client, df_Book, df_dif, df
 
     #if type == "Ticker":
@@ -330,11 +332,11 @@ def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
     else:
         client.drop_database("Markets")
         client.create_database("Markets")
-    #if "difBook" not in client.get_list_database():
-    #    client.create_database("difBook")
-    #else:
-    #    client.drop_database("difBook")
-    #    client.create_database("difBook")
+    if "difBook" not in client.get_list_database():
+        client.create_database("difBook")
+    else:
+        client.drop_database("difBook")
+        client.create_database("difBook")
 
     Binance = Web_Client.Binance()
     Binance_REST = Client.Binance()
@@ -354,13 +356,34 @@ def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
 
     if type == "Ticker" or type == "all":
         Binance.start_trade_socket('ethbtc', partial(process_message,exchange = "Binance", pair = "ethbtc"))
-        Bitfinex.start_trades("tETHBTC", partial(process_message,exchange = "Bitfinex", pair = "ethbtc"))
-        BitFlyer.start_executions("ETH-BTC", partial(process_message,exchange = "BitFlyer", pair = "ethbtc"))
+        Bitfinex.start_trades("tETHBTC", partial(process_message,exchange = "Bitfinex", pair = "ethbtc"))        
+        BitFlyer.start_executions("ETH_BTC", partial(process_message,exchange = "BitFlyer", pair = "ethbtc"))
         Bithumb.start_trade('ETH-BTC', partial(process_message,exchange = "Bithumb", pair = "ethbtc"))
         Bitstamp.start_ticker('ethbtc', partial(process_message,exchange = "Bitstamp", pair = "ethbtc"))
         Coinbase.start_matches('ETH-BTC', partial(process_message,exchange = "Coinbase", pair = "ethbtc"))
         Huobi.start_trade('ethbtc', partial(process_message,exchange = "Huobi", pair = "ethbtc"))
         Kraken.start_trade('ETH/XBT', partial(process_message,exchange = "Kraken", pair = "ethbtc"))
+
+        time.sleep(1)
+
+        Bitfinex.start_trades("tBTCUSD", partial(process_message,exchange = "Bitfinex", pair = "btcusd"))
+        Bitstamp.start_ticker('btcusd', partial(process_message,exchange = "Bitstamp", pair = "btcusd"))
+        BitFlyer.start_executions("BTC_USD", partial(process_message,exchange = "BitFlyer", pair = "btcusd"))
+        Coinbase.start_matches('BTC-USD', partial(process_message,exchange = "Coinbase", pair = "btcusd"))
+
+        time.sleep(1)
+
+        Bitfinex.start_trades("tETHUSD", partial(process_message,exchange = "Bitfinex", pair = "ethusd"))
+        Bitstamp.start_ticker('ethusd', partial(process_message,exchange = "Bitstamp", pair = "ethusd"))
+        Coinbase.start_matches('BTC-USD', partial(process_message,exchange = "Coinbase", pair = "ethusd"))
+
+        time.sleep(1)
+
+        Bitfinex.start_trades("tXTZUSD", partial(process_message,exchange = "Bitfinex", pair = "xtzusd"))
+        Coinbase.start_matches('XTZ-USD', partial(process_message,exchange = "Coinbase", pair = "xtzusd"))
+
+        Coinbase.start_matches('DASH-USD', partial(process_message,exchange = "Coinbase", pair = "dashusd"))
+
     if type == "Book" or type == "all":
         Binance.start_depth_socket("ethbtc",partial(process_message_2,exchange = "Binance", pair = "ethbtc"))
         Bitfinex.start_raw_book("tETHBTC", partial(process_message_2,exchange = "Bitfinex", pair = "ethbtc"))
@@ -370,9 +393,31 @@ def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
         Bitstamp2.start_liveFull('ethbtc', partial(process_message_2,exchange = "Bitstamp", pair = "ethbtc"))
         Bitstamp.start_orderBook('ethbtc', partial(process_message_2,exchange = "Bitstamp", pair = "ethbtc"))
         Coinbase.start_ticker('ETH-BTC', partial(process_message_2,exchange = "Coinbase", pair = "ethbtc"))
-        Coinbase.start_heartbeat('ETH-BTC', nothing)
         Huobi.start_depth('ethbtc', partial(process_message_2,exchange = "Huobi", pair = "ethbtc"))
         Kraken.start_book('ETH/XBT', partial(process_message_2,exchange = "Kraken", pair = "ethbtc"))
+
+        time.sleep(1)
+
+        Bitfinex.start_raw_book("tBTCUSD", partial(process_message_2,exchange = "Bitfinex", pair = "btcusd"))
+        Bitstamp2.start_liveFull('btcusd', partial(process_message_2,exchange = "Bitstamp", pair = "btcusd"))
+        Bitstamp.start_orderBook('btcusd', partial(process_message_2,exchange = "Bitstamp", pair = "btcusd"))
+        BitFlyer.start_book("BTC_USD", partial(process_message_2,exchange = "BitFlyer", pair = "btcusd"))
+        BitFlyer2.start_book_updates("BTC_USD", partial(process_message_2,exchange = "BitFlyer", pair = "btcusd"))
+        Coinbase.start_ticker('BTC-USD', partial(process_message_2,exchange = "Coinbase", pair = "btcusd"))
+
+        time.sleep(1)
+
+        Bitfinex.start_raw_book("tXTZUSD", partial(process_message_2,exchange = "Bitfinex", pair = "xtzusd"))
+        Coinbase.start_ticker('XTZ-USD', partial(process_message_2,exchange = "Coinbase", pair = "xtzusd"))
+
+        time.sleep(1)
+
+        Coinbase.start_ticker('DASH-USD', partial(process_message_2,exchange = "Coinbase", pair = "dashusd"))
+        
+        time.sleep(1)
+
+        Coinbase.start_heartbeat('ETH-BTC', nothing)
+
 
     Binance.start()
     Bitfinex.start()
@@ -385,6 +430,7 @@ def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
     Huobi.start()
     Kraken.start()
     static_order = []
+
     if type == "Ticker":
         time.sleep(10)
     else:
@@ -401,8 +447,8 @@ def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
             time.sleep(10)
         BitFlyer.close()
         Bitstamp.close()
-    time.sleep(240)
-    for i in range(11):
+    time.sleep(90)
+    for i in range(5):
         df_temp = df
         df_dif_temp = df_dif
         df_Book_temp = df_Book
@@ -410,20 +456,36 @@ def loadPair(Pair_1, Pair_2, time_wait, dbname, type):
         df_temp = df_temp.set_index("t")
         df_dif_temp = df_dif_temp.set_index("t_recorded")
         df_Book_temp = df_Book_temp.set_index("t_recorded")
-
+        print("-------------------------------")
         print("WRITING " + str(len(df_temp)) + " lines in Markets : " + str(BinanceToTime(int(round(time.time() * 1000)))))
         client.write_points(df_temp,"Price", time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
+        # Print first old and first new timestep
+        #print(df.iloc[0])
         df = df.iloc[len(df_temp):]
-
+        #print(df.iloc[0])
+        print("-------------------------------")
         print("WRITING " + str(len(df_dif_temp)) + " lines in difBook : " + str(BinanceToTime(int(round(time.time() * 1000)))))
         client.write_points(df_dif_temp,"difBook",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
+        #print(df_dif.iloc[0])
         df_dif = df_dif.iloc[len(df_dif_temp):]
-
+        #print(df_dif.iloc[0])
+        print("-------------------------------")
         print("WRITING " + str(len(df_Book_temp)) + " lines in Book : " + str(BinanceToTime(int(round(time.time() * 1000)))))
         client.write_points(df_Book_temp,"Book",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
+        #print(df_Book.iloc[0])
         df_Book = df_Book.iloc[len(df_Book_temp):]
-
-        time.sleep(300)
+        #print(df_Book.iloc[0])
+        print("-------------------------------")
+        _msg_ = Binance_REST.depth("ETHBTC", limit = 1000)
+        d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
+                             "Host": ["Binance"], 
+                             "Pair": ["ethbtc"],
+                             "LastUpdateID": [_msg_["lastUpdateId"]],
+                             "Bids":[_msg_["bids"]], 
+                             "Asks":[_msg_["asks"]]
+                            })
+        df_Book = df_Book.append(d_2)
+        time.sleep(150)
 
     Bitfinex.close()
     BitFlyer2.close()
