@@ -13,7 +13,6 @@ def nothing(msg):
     pass
 
 def process_message(msg, exchange, pair):
-    global df, client
     try:
         add = 1
         if exchange == "Binance":
@@ -39,8 +38,7 @@ def process_message(msg, exchange, pair):
                         "Price":[p],
                         "Q": Q
                     })
-                    df = df.append(d)
-                    tempdf = df
+                    exec("globals()['" + exchange + "_" + pair.upper() + "_df'] = globals()['" + exchange + "_" + pair.upper() + "_df'].append(d)", globals(),{"d":d})                   
         elif exchange == "BitFlyer":
             if type(msg["params"]["message"][0]) == type([]):
                 # This probably can be deleted
@@ -55,7 +53,7 @@ def process_message(msg, exchange, pair):
                             "Price":[p],
                             "Q":Q
                         })
-                    df = df.append(d)
+                    exec("globals()['" + exchange + "_" + pair.upper() + "_df'] = globals()['" + exchange + "_" + pair.upper() + "_df'].append(d)", globals(),{"d":d})
             else:
                 t = datetime.strptime(msg["params"]["message"][0]["exec_date"][:26],"%Y-%m-%dT%H:%M:%S.%f") + timedelta(hours = 2)
                 p = float(msg["params"]["message"][0]["price"])
@@ -67,8 +65,7 @@ def process_message(msg, exchange, pair):
                         "Price":[p],
                         "Q":Q
                     })
-                
-                df = df.append(d)
+                exec("globals()['" + exchange + "_" + pair.upper() + "_df'] = globals()['" + exchange + "_" + pair.upper() + "_df'].append(d)", globals(),{"d":d})             
         elif exchange == "Bithumb":
             if msg["code"] == "00006":
                 for element in msg["data"]:
@@ -81,9 +78,8 @@ def process_message(msg, exchange, pair):
                         "Write_Time": [BinanceToTime_string(int(round(time.time() * 1000)))],
                         "Price":[p],
                         "Q": Q
-                    })
-                    df = df.append(d)
-                    add = 0
+                    })        
+                    exec("globals()['" + exchange + "_" + pair.upper() + "_df'] = globals()['" + exchange + "_" + pair.upper() + "_df'].append(d)", globals(),{"d":d})
             else:
                 t = BinanceToTime(int(msg["data"]["t"])*1000)
                 p = float(msg["data"]["p"])
@@ -114,7 +110,8 @@ def process_message(msg, exchange, pair):
                     "Price":[p],
                     "Q": Q
                 })
-            df = df.append(d)
+            exec("globals()['" + exchange + "_" + pair.upper() + "_df'] = globals()['" + exchange + "_" + pair.upper() + "_df'].append(d)", globals(),{"d":d})
+
         #print(d)
     except Exception as e:
         if type(msg) == type([]):
@@ -143,7 +140,6 @@ def process_message(msg, exchange, pair):
                 print("MARKET - message type: Other - Market: " + exchange)
 
 def process_message_2(msg, exchange, pair):
-    global df_dif, df_Book
     try:
         add = 1
         if exchange == "Binance":
@@ -153,30 +149,30 @@ def process_message_2(msg, exchange, pair):
             asks = msg["a"]
         elif exchange == "Bitfinex":
             if len(msg[1])>3:
-                d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
+                d_2 = pd.DataFrame({ "t": [BinanceToTime(int(round(time.time() * 1000)))], 
                         "Host": [exchange], 
                         "Pair": [pair],
                         "LastUpdateID": [msg[0]],
                         "Bids":[msg[1][0:99]], 
                         "Asks":[msg[1][100::]]
                     })
-                df_Book = df_Book.append(d_2)
+                exec("globals()['" + exchange + "_" + pair.upper() + "_df_Book'] = globals()['" + exchange + "_" + pair.upper() + "_df_Book'].append(d_2)", globals(),{"d_2":d_2})
                 add = 0
             else:
                 t = BinanceToTime(int(round(time.time() * 1000)))
                 S = msg[1][0]
-                bids = msg[1][1]
-                asks = msg[1][2]
+                bids = str(msg[1][1])
+                asks = str(msg[1][2])
         elif exchange == "BitFlyer":
             if msg["params"]["channel"][0:25] == "lightning_board_snapshot_":
-                d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
+                d_2 = pd.DataFrame({ "t": [BinanceToTime(int(round(time.time() * 1000)))], 
                         "Host": [exchange], 
                         "Pair": [pair],
                         "LastUpdateID": [msg["params"]["channel"]],
                         "Bids":[msg["params"]["message"]["bids"]], 
                         "Asks":[msg["params"]["message"]["asks"]]
                     })
-                df_Book = df_Book.append(d_2)
+                exec("globals()['" + exchange + "_" + pair.upper() + "_df_Book'] = globals()['" + exchange + "_" + pair.upper() + "_df_Book'].append(d_2)", globals(),{"d_2":d_2})
                 add = 0
             else:
                 t = BinanceToTime(int(round(time.time() * 1000)))
@@ -185,14 +181,14 @@ def process_message_2(msg, exchange, pair):
                 asks = msg["params"]["message"]["asks"]
         elif exchange == "Bithumb":
             if msg["code"] == "00006":
-                d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
+                d_2 = pd.DataFrame({ "t": [BinanceToTime(int(round(time.time() * 1000)))], 
                         "Host": [exchange], 
                         "Pair": [pair],
                         "LastUpdateID": [msg["timestamp"]],
                         "Bids":[msg["data"]["b"]], 
                         "Asks":[msg["data"]["s"]]
                     })
-                df_Book = df_Book.append(d_2)
+                exec("globals()['" + exchange + "_" + pair.upper() + "_df_Book'] = globals()['" + exchange + "_" + pair.upper() + "_df_Book'].append(d_2)", globals(),{"d_2":d_2})
                 add = 0
             else:
                 t = BinanceToTime(int(round(time.time() * 1000)))
@@ -201,14 +197,14 @@ def process_message_2(msg, exchange, pair):
                 asks = msg["data"]["s"]
         elif exchange == "Bitstamp":
             if len(msg["data"]["bids"]) == 100:
-                d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
+                d_2 = pd.DataFrame({ "t": [BinanceToTime(int(round(time.time() * 1000)))], 
                         "Host": [exchange], 
                         "Pair": [pair],
                         "LastUpdateID": [msg["data"]["microtimestamp"]],
                         "Bids":[msg["data"]["bids"]], 
                         "Asks":[msg["data"]["asks"]]
                     })
-                df_Book = df_Book.append(d_2)
+                exec("globals()['" + exchange + "_" + pair.upper() + "_df_Book'] = globals()['" + exchange + "_" + pair.upper() + "_df_Book'].append(d_2)", globals(),{"d_2":d_2})
                 add = 0
             else:
                 t = BinanceToTime(int(round(time.time() * 1000)))
@@ -217,14 +213,14 @@ def process_message_2(msg, exchange, pair):
                 asks = msg["data"]["asks"]
         elif exchange == "Coinbase":
             if msg["type"] == "snapshot":
-                d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
+                d_2 = pd.DataFrame({ "t": [BinanceToTime(int(round(time.time() * 1000)))], 
                         "Host": [exchange], 
                         "Pair": [pair],
                         "LastUpdateID": ["-"],
                         "Bids":[msg["bids"]], 
                         "Asks":[msg["asks"]]
                     })
-                df_Book = df_Book.append(d_2)
+                exec("globals()['" + exchange + "_" + pair.upper() + "_df_Book'] = globals()['" + exchange + "_" + pair.upper() + "_df_Book'].append(d_2)", globals(),{"d_2":d_2})
                 add = 0
             elif msg["type"] == "match":
                 t = BinanceToTime(int(round(time.time() * 1000)))
@@ -238,25 +234,25 @@ def process_message_2(msg, exchange, pair):
                 asks = "-"
 
         elif exchange == "Huobi":
-            d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
+            d_2 = pd.DataFrame({ "t": [BinanceToTime(int(round(time.time() * 1000)))], 
                     "Host": [exchange], 
                     "Pair": [pair],
                     "LastUpdateID": [msg["tick"]["ts"]],
                     "Bids":[msg["tick"]["bids"]], 
                     "Asks":[msg["tick"]["asks"]]
                 })
-            df_Book = df_Book.append(d_2)
+            exec("globals()['" + exchange + "_" + pair.upper() + "_df_Book'] = globals()['" + exchange + "_" + pair.upper() + "_df_Book'].append(d_2)", globals(),{"d_2":d_2})
             add = 0
         elif exchange == "Kraken":
             if "as" in msg[1]:
-                d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
+                d_2 = pd.DataFrame({ "t": [BinanceToTime(int(round(time.time() * 1000)))], 
                         "Host": [exchange], 
                         "Pair": [pair],
                         "LastUpdateID": ["-"],
                         "Bids":[msg[1]["bs"]], 
                         "Asks":[msg[1]["as"]]
                     })
-                df_Book = df_Book.append(d_2)
+                exec("globals()['" + exchange + "_" + pair.upper() + "_df_Book'] = globals()['" + exchange + "_" + pair.upper() + "_df_Book'].append(d_2)", globals(),{"d_2":d_2})
                 add = 0
             else:
                 t = BinanceToTime(int(round(time.time() * 1000)))
@@ -270,14 +266,14 @@ def process_message_2(msg, exchange, pair):
                 else:
                     asks = "-"
         if add == 1:
-            d = pd.DataFrame({ "t_recorded": [t], 
+            d = pd.DataFrame({ "t": [t], 
                     "Host": [exchange], 
                     "Pair": [pair],
                     "Seg": [S],
                     "Bids":[bids],
                     "Asks":[asks]
                 })
-            df_dif = df_dif.append(d)
+            exec("globals()['" + exchange + "_" + pair.upper() + "_df_dif'] = globals()['" + exchange + "_" + pair.upper() + "_df_dif'].append(d)", globals(),{"d":d})
     except Exception as e:
         if type(msg) == type([]):
             if msg[1] == "hb":
@@ -304,28 +300,28 @@ def process_message_2(msg, exchange, pair):
                 print(msg)
                 print("MARKET - message type: Other - Market: " + exchange)
 
-def loadPair(Pairs,time_wait, dbname, type):
-    global client, df_Book, df_dif, df
+def loadPair():
+    groups = ["Binance_ETHBTC", "Bitfinex_ETHBTC", "BitFlyer_ETHBTC", "Bitstamp_ETHBTC", 
+            "Bithumb_ETHBTC", "Coinbase_ETHBTC", "Huobi_ETHBTC", "Kraken_ETHBTC", 
+            "Bitfinex_BTCUSD", "Bitstamp_BTCUSD", "BitFlyer_BTCUSD", "Coinbase_BTCUSD",
+            "Bitfinex_ETHUSD", "Bitstamp_ETHUSD", "Coinbase_ETHUSD",
+            "Bitfinex_XTZUSD", "Coinbase_XTZUSD",
+            "Coinbase_DASHUSD"]
 
-    #if type == "Ticker":
-    #    global df
-    #    df = pd.DataFrame(columns = ["t", "Host", "Pair", "Event_Time", "Write_Time", "Price"])
-    #elif type == "Book":
-    #    global df_Book, df_dif
-    #    df_Book = pd.DataFrame(columns = ["t_recorded","Host","Pair","LastUpdateID","Bids","Asks"])
-    #    df_dif = pd.DataFrame(columns = ["t_recorded", "Host", "Pair", "Seg", "Bids", "Asks"])
-    #else:
-    df_Book = pd.DataFrame(columns = ["t_recorded","Host","Pair","LastUpdateID","Bids","Asks"])
-    df_dif = pd.DataFrame(columns = ["t_recorded", "Host", "Pair", "Seg", "Bids", "Asks"])
-    df = pd.DataFrame(columns = ["t", "Host", "Pair", "Event_Time", "Write_Time", "Price", "Q"])
+    text = "global client "
+    for element in groups:
+        text = text + "," + element + "_df_dif"
+        text = text + "," + element + "_df"
+        text = text + "," + element + "_df_Book"
+    exec(text, globals())
+    for element in groups:
+
+        exec(element + "_df_dif = pd.DataFrame(columns = ['t', 'Host', 'Pair', 'Seg', 'Bids', 'Asks'])", globals())
+        exec(element + "_df = pd.DataFrame(columns = ['t', 'Host', 'Pair', 'Write_Time', 'Price', 'Q'])", globals())
+        exec(element + "_df_Book = pd.DataFrame(columns = ['t', 'Host', 'Pair', 'LastUpdateID','Bids','Asks'])" , globals())
+
 
     client = DataFrameClient('localhost', 8086, 'root', 'root')
-
-    #if dbname not in client.get_list_database():
-    #    client.create_database(dbname)
-    #else:
-    #    client.drop_database(dbname)
-    #    client.create_database(dbname)
 
     if {"name":"Markets"} not in client.get_list_database():
         client.create_database("Markets")
@@ -354,69 +350,79 @@ def loadPair(Pairs,time_wait, dbname, type):
     Huobi = Web_Client.Huobi()
     Kraken = Web_Client.Kraken()
 
-    if type == "Ticker" or type == "all":
-        Binance.start_trade_socket('ethbtc', partial(process_message,exchange = "Binance", pair = "ethbtc"))
-        Bitfinex.start_trades("tETHBTC", partial(process_message,exchange = "Bitfinex", pair = "ethbtc"))        
-        BitFlyer.start_executions("ETH_BTC", partial(process_message,exchange = "BitFlyer", pair = "ethbtc"))
-        Bithumb.start_trade('ETH-BTC', partial(process_message,exchange = "Bithumb", pair = "ethbtc"))
-        Bitstamp.start_ticker('ethbtc', partial(process_message,exchange = "Bitstamp", pair = "ethbtc"))
-        Coinbase.start_matches('ETH-BTC', partial(process_message,exchange = "Coinbase", pair = "ethbtc"))
-        Huobi.start_trade('ethbtc', partial(process_message,exchange = "Huobi", pair = "ethbtc"))
-        Kraken.start_trade('ETH/XBT', partial(process_message,exchange = "Kraken", pair = "ethbtc"))
+    Binance.start_trade_socket('ethbtc', partial(process_message,exchange = "Binance", pair = "ethbtc"))
+    Bitfinex.start_trades("tETHBTC", partial(process_message,exchange = "Bitfinex", pair = "ethbtc"))        
+    BitFlyer.start_executions("ETH_BTC", partial(process_message,exchange = "BitFlyer", pair = "ethbtc"))
+    Bithumb.start_trade('ETH-BTC', partial(process_message,exchange = "Bithumb", pair = "ethbtc"))
+    Bitstamp.start_ticker('ethbtc', partial(process_message,exchange = "Bitstamp", pair = "ethbtc"))
+    Coinbase.start_matches('ETH-BTC', partial(process_message,exchange = "Coinbase", pair = "ethbtc"))
+    Huobi.start_trade('ethbtc', partial(process_message,exchange = "Huobi", pair = "ethbtc"))
+    Kraken.start_trade('ETH/XBT', partial(process_message,exchange = "Kraken", pair = "ethbtc"))
 
-        time.sleep(1)
+    time.sleep(1)
 
-        Bitfinex.start_trades("tBTCUSD", partial(process_message,exchange = "Bitfinex", pair = "btcusd"))
-        Bitstamp.start_ticker('btcusd', partial(process_message,exchange = "Bitstamp", pair = "btcusd"))
-        BitFlyer.start_executions("BTC_USD", partial(process_message,exchange = "BitFlyer", pair = "btcusd"))
-        Coinbase.start_matches('BTC-USD', partial(process_message,exchange = "Coinbase", pair = "btcusd"))
+    Bitfinex.start_trades("tBTCUSD", partial(process_message,exchange = "Bitfinex", pair = "btcusd"))
+    Bitstamp.start_ticker('btcusd', partial(process_message,exchange = "Bitstamp", pair = "btcusd"))
+    BitFlyer.start_executions("BTC_USD", partial(process_message,exchange = "BitFlyer", pair = "btcusd"))
+    Coinbase.start_matches('BTC-USD', partial(process_message,exchange = "Coinbase", pair = "btcusd"))
 
-        time.sleep(1)
+    time.sleep(1)
 
-        Bitfinex.start_trades("tETHUSD", partial(process_message,exchange = "Bitfinex", pair = "ethusd"))
-        Bitstamp.start_ticker('ethusd', partial(process_message,exchange = "Bitstamp", pair = "ethusd"))
-        Coinbase.start_matches('BTC-USD', partial(process_message,exchange = "Coinbase", pair = "ethusd"))
+    Bitfinex.start_trades("tETHUSD", partial(process_message,exchange = "Bitfinex", pair = "ethusd"))
+    Bitstamp.start_ticker('ethusd', partial(process_message,exchange = "Bitstamp", pair = "ethusd"))
+    Coinbase.start_matches('ETH-USD', partial(process_message,exchange = "Coinbase", pair = "ethusd"))
 
-        time.sleep(1)
+    time.sleep(1)
 
-        Bitfinex.start_trades("tXTZUSD", partial(process_message,exchange = "Bitfinex", pair = "xtzusd"))
-        Coinbase.start_matches('XTZ-USD', partial(process_message,exchange = "Coinbase", pair = "xtzusd"))
+    Bitfinex.start_trades("tXTZUSD", partial(process_message,exchange = "Bitfinex", pair = "xtzusd"))
+    Coinbase.start_matches('XTZ-USD', partial(process_message,exchange = "Coinbase", pair = "xtzusd"))
 
-        Coinbase.start_matches('DASH-USD', partial(process_message,exchange = "Coinbase", pair = "dashusd"))
+    Coinbase.start_matches('DASH-USD', partial(process_message,exchange = "Coinbase", pair = "dashusd"))
 
-    if type == "Book" or type == "all":
-        Binance.start_depth_socket("ethbtc",partial(process_message_2,exchange = "Binance", pair = "ethbtc"))
-        Bitfinex.start_raw_book("tETHBTC", partial(process_message_2,exchange = "Bitfinex", pair = "ethbtc"))
-        BitFlyer.start_book("ETH_BTC", partial(process_message_2,exchange = "BitFlyer", pair = "ethbtc"))
-        BitFlyer2.start_book_updates("ETH_BTC", partial(process_message_2,exchange = "BitFlyer", pair = "ethbtc"))
-        Bithumb.start_order_book('ETH-BTC', partial(process_message_2,exchange = "Bithumb", pair = "ethbtc"))
-        Bitstamp2.start_liveFull('ethbtc', partial(process_message_2,exchange = "Bitstamp", pair = "ethbtc"))
-        Bitstamp.start_orderBook('ethbtc', partial(process_message_2,exchange = "Bitstamp", pair = "ethbtc"))
-        Coinbase.start_ticker('ETH-BTC', partial(process_message_2,exchange = "Coinbase", pair = "ethbtc"))
-        Huobi.start_depth('ethbtc', partial(process_message_2,exchange = "Huobi", pair = "ethbtc"))
-        Kraken.start_book('ETH/XBT', partial(process_message_2,exchange = "Kraken", pair = "ethbtc"))
+    #################################################
+    #################################################
+    #################################################
+    #################################################
 
-        time.sleep(1)
+    Binance.start_depth_socket("ethbtc",partial(process_message_2,exchange = "Binance", pair = "ethbtc"))
+    Bitfinex.start_raw_book("tETHBTC", partial(process_message_2,exchange = "Bitfinex", pair = "ethbtc"))
+    BitFlyer.start_book("ETH_BTC", partial(process_message_2,exchange = "BitFlyer", pair = "ethbtc"))
+    BitFlyer2.start_book_updates("ETH_BTC", partial(process_message_2,exchange = "BitFlyer", pair = "ethbtc"))
+    Bithumb.start_order_book('ETH-BTC', partial(process_message_2,exchange = "Bithumb", pair = "ethbtc"))
+    Bitstamp2.start_liveFull('ethbtc', partial(process_message_2,exchange = "Bitstamp", pair = "ethbtc"))
+    Bitstamp.start_orderBook('ethbtc', partial(process_message_2,exchange = "Bitstamp", pair = "ethbtc"))
+    Coinbase.start_ticker('ETH-BTC', partial(process_message_2,exchange = "Coinbase", pair = "ethbtc"))
+    Huobi.start_depth('ethbtc', partial(process_message_2,exchange = "Huobi", pair = "ethbtc"))
+    Kraken.start_book('ETH/XBT', partial(process_message_2,exchange = "Kraken", pair = "ethbtc"))
 
-        Bitfinex.start_raw_book("tBTCUSD", partial(process_message_2,exchange = "Bitfinex", pair = "btcusd"))
-        Bitstamp2.start_liveFull('btcusd', partial(process_message_2,exchange = "Bitstamp", pair = "btcusd"))
-        Bitstamp.start_orderBook('btcusd', partial(process_message_2,exchange = "Bitstamp", pair = "btcusd"))
-        BitFlyer.start_book("BTC_USD", partial(process_message_2,exchange = "BitFlyer", pair = "btcusd"))
-        BitFlyer2.start_book_updates("BTC_USD", partial(process_message_2,exchange = "BitFlyer", pair = "btcusd"))
-        Coinbase.start_ticker('BTC-USD', partial(process_message_2,exchange = "Coinbase", pair = "btcusd"))
+    time.sleep(1)
 
-        time.sleep(1)
+    Bitfinex.start_raw_book("tBTCUSD", partial(process_message_2,exchange = "Bitfinex", pair = "btcusd"))
+    Bitstamp2.start_liveFull('btcusd', partial(process_message_2,exchange = "Bitstamp", pair = "btcusd"))
+    Bitstamp.start_orderBook('btcusd', partial(process_message_2,exchange = "Bitstamp", pair = "btcusd"))
+    BitFlyer.start_book("BTC_USD", partial(process_message_2,exchange = "BitFlyer", pair = "btcusd"))
+    BitFlyer2.start_book_updates("BTC_USD", partial(process_message_2,exchange = "BitFlyer", pair = "btcusd"))
+    Coinbase.start_ticker('BTC-USD', partial(process_message_2,exchange = "Coinbase", pair = "btcusd"))
 
-        Bitfinex.start_raw_book("tXTZUSD", partial(process_message_2,exchange = "Bitfinex", pair = "xtzusd"))
-        Coinbase.start_ticker('XTZ-USD', partial(process_message_2,exchange = "Coinbase", pair = "xtzusd"))
+    time.sleep(1)
 
-        time.sleep(1)
+    Bitfinex.start_raw_book("tETHUSD", partial(process_message_2,exchange = "Bitfinex", pair = "ethusd"))
+    Bitstamp2.start_liveFull('ethusd', partial(process_message_2,exchange = "Bitstamp", pair = "ethusd"))
+    Bitstamp.start_orderBook('ethusd', partial(process_message_2,exchange = "Bitstamp", pair = "ethusd"))
+    Coinbase.start_ticker('ETH-USD', partial(process_message_2,exchange = "Coinbase", pair = "ethusd"))
 
-        Coinbase.start_ticker('DASH-USD', partial(process_message_2,exchange = "Coinbase", pair = "dashusd"))
+    time.sleep(1)
+
+    Bitfinex.start_raw_book("tXTZUSD", partial(process_message_2,exchange = "Bitfinex", pair = "xtzusd"))
+    Coinbase.start_ticker('XTZ-USD', partial(process_message_2,exchange = "Coinbase", pair = "xtzusd"))
+
+    time.sleep(1)
+
+    Coinbase.start_ticker('DASH-USD', partial(process_message_2,exchange = "Coinbase", pair = "dashusd"))
         
-        time.sleep(1)
+    time.sleep(1)
 
-        Coinbase.start_heartbeat('ETH-BTC', nothing)
+    Coinbase.start_heartbeat('ETH-BTC', nothing)
 
 
     Binance.start()
@@ -431,62 +437,76 @@ def loadPair(Pairs,time_wait, dbname, type):
     Kraken.start()
     static_order = []
 
-    if type == "Ticker":
-        time.sleep(10)
-    else:
-        for i in range(6):
-            _msg_ = Binance_REST.depth("ETHBTC", limit = 1000)
-            d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
-                        "Host": ["Binance"], 
-                        "Pair": ["ethbtc"],
-                        "LastUpdateID": [_msg_["lastUpdateId"]],
-                        "Bids":[_msg_["bids"]], 
-                        "Asks":[_msg_["asks"]]
-                    })
-            df_Book = df_Book.append(d_2)
-            time.sleep(10)
-        BitFlyer.close()
-        Bitstamp.close()
-    time.sleep(90)
-    for i in range(5):
-        df_temp = df
-        df_dif_temp = df_dif
-        df_Book_temp = df_Book
-
-        df_temp = df_temp.set_index("t")
-        df_dif_temp = df_dif_temp.set_index("t_recorded")
-        df_Book_temp = df_Book_temp.set_index("t_recorded")
-        print("-------------------------------")
-        print("WRITING " + str(len(df_temp)) + " lines in Markets : " + str(BinanceToTime(int(round(time.time() * 1000)))))
-        client.write_points(df_temp,"Price", time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
-        # Print first old and first new timestep
-        #print(df.iloc[0])
-        df = df.iloc[len(df_temp):]
-        #print(df.iloc[0])
-        print("-------------------------------")
-        print("WRITING " + str(len(df_dif_temp)) + " lines in difBook : " + str(BinanceToTime(int(round(time.time() * 1000)))))
-        client.write_points(df_dif_temp,"difBook",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
-        #print(df_dif.iloc[0])
-        df_dif = df_dif.iloc[len(df_dif_temp):]
-        #print(df_dif.iloc[0])
-        print("-------------------------------")
-        print("WRITING " + str(len(df_Book_temp)) + " lines in Book : " + str(BinanceToTime(int(round(time.time() * 1000)))))
-        client.write_points(df_Book_temp,"Book",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
-        #print(df_Book.iloc[0])
-        df_Book = df_Book.iloc[len(df_Book_temp):]
-        #print(df_Book.iloc[0])
-        print("-------------------------------")
+    for i in range(6):
         _msg_ = Binance_REST.depth("ETHBTC", limit = 1000)
-        d_2 = pd.DataFrame({ "t_recorded": [BinanceToTime(int(round(time.time() * 1000)))], 
-                             "Host": ["Binance"], 
-                             "Pair": ["ethbtc"],
-                             "LastUpdateID": [_msg_["lastUpdateId"]],
-                             "Bids":[_msg_["bids"]], 
-                             "Asks":[_msg_["asks"]]
-                            })
-        df_Book = df_Book.append(d_2)
-        time.sleep(150)
+        d_2 = pd.DataFrame({ "t": [BinanceToTime(int(round(time.time() * 1000)))], 
+                    "Host": ["Binance"], 
+                    "Pair": ["ethbtc"],
+                    "LastUpdateID": [_msg_["lastUpdateId"]],
+                    "Bids":[_msg_["bids"]], 
+                    "Asks":[_msg_["asks"]]
+                })
+        var = globals()
+        var["d_2"] = d_2
+        exec("Binance_ETHBTC_df_Book = Binance_ETHBTC_df_Book.append(d_2)", var)
+        time.sleep(10)
+    BitFlyer.close()
+    Bitstamp.close()
+    time.sleep(90)
+    for i in range(11):
+        print("CHECKING DATAFRAMES: " +  str(BinanceToTime(int(round(time.time() * 1000)))))
+        for element in groups:
+            ldict = {}
+            var = globals()
+            exec("df_temp = " + element + "_df",var, ldict)
+            df_temp = ldict["df_temp"]
+            exec("df_Book_temp = " + element + "_df_Book",var, ldict)
+            df_Book_temp = ldict["df_Book_temp"]
+            exec("df_dif_temp = " + element + "_df_dif",var, ldict)
+            df_dif_temp = ldict["df_dif_temp"]
+            
+            var.update(ldict)
+            
+            if len(df_Book_temp)>2500:
+                print("-------------------------------")
+                df_Book_temp = df_Book_temp.set_index("t")
+                print("WRITING " + str(len(df_Book_temp)) + " lines in Book FROM " + element + ": " + str(BinanceToTime(int(round(time.time() * 1000)))))
+                client.write_points(df_Book_temp,"Book",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'], batch_size = 1000)
+                exec(element + "_df_Book = " + element + "_df_Book.iloc[len(df_Book_temp):]", var)
+                print("-------------------------------")
 
+            if len(df_dif_temp)>2500:
+                print("-------------------------------")
+                df_dif_temp = df_dif_temp.set_index("t")
+                print("WRITING " + str(len(df_dif_temp)) + " lines in difBook FROM " + element + ": " + str(BinanceToTime(int(round(time.time() * 1000)))))
+                client.write_points(df_dif_temp,"difBook",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'], batch_size = 1000)
+                var = globals()
+                var["d_2"] = d_2
+                exec(element +  "_df_dif = " + element + "_df_dif.iloc[len(df_dif_temp):]", var)
+                print("-------------------------------")
+
+            if len(df_temp)>2500:
+                print("-------------------------------")
+                df_temp = df_temp.set_index("t")
+                print("WRITING " + str(len(df_temp)) + " lines in Markets FROM " + element + ": " + str(BinanceToTime(int(round(time.time() * 1000)))))
+                client.write_points(df_temp,"Price", time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'], batch_size = 1000)
+                exec(element +  "_df = " + element + "_df.iloc[len(df_temp):]", var)
+                print("-------------------------------")
+                
+        #_msg_ = Binance_REST.depth("ETHBTC", limit = 1000)
+        #d_2 = pd.DataFrame({ "t": [BinanceToTime(int(round(time.time() * 1000)))], 
+        #                     "Host": ["Binance"], 
+        #                     "Pair": ["ethbtc"],
+        #                     "LastUpdateID": [_msg_["lastUpdateId"]],
+        #                     "Bids":[_msg_["bids"]], 
+        #                     "Asks":[_msg_["asks"]]
+        #                    })
+        #var = globals()
+        #var["d_2"] = d_2
+        #exec("Binance_ETHBTC_df_Book = Binance_ETHBTC_df_Book.append(d_2)", var)
+        time.sleep(150)
+    
+    Binance.close()
     Bitfinex.close()
     BitFlyer2.close()
     Bithumb.close()
@@ -495,15 +515,35 @@ def loadPair(Pairs,time_wait, dbname, type):
     Huobi.close()
     Kraken.close()
 
-    df_temp = df.set_index("t")
-    df_dif_temp = df_dif.set_index("t_recorded")
-    df_Book_temp = df_Book.set_index("t_recorded")
-    
-    client.write_points(df_temp,"Price", time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
-    client.write_points(df_dif_temp,"difBook",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
-    client.write_points(df_Book_temp,"Book",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'])
+    for element in groups:
+        ldict = {}
+        var = globals()
+        exec("df_temp = " + element + "_df",var, ldict)
+        df_temp = ldict["df_temp"]
+        exec("df_Book_temp = " + element + "_df_Book",var, ldict)
+        df_Book_temp = ldict["df_Book_temp"]
+        exec("df_dif_temp = " + element + "_df_dif",var, ldict)
+        df_dif_temp = ldict["df_dif_temp"]
+            
+        var.update(ldict)
+
+        print("-------------------------------")
+        df_Book_temp = df_Book_temp.set_index("t")
+        print("WRITING " + str(len(df_Book_temp)) + " lines in Book FROM " + element + ": " + str(BinanceToTime(int(round(time.time() * 1000)))))
+        client.write_points(df_Book_temp,"Book",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'], batch_size = 1000)
+
+
+        df_dif_temp = df_dif_temp.set_index("t")
+        print("WRITING " + str(len(df_dif_temp)) + " lines in difBook FROM " + element + ": " + str(BinanceToTime(int(round(time.time() * 1000)))))
+        client.write_points(df_dif_temp,"difBook",time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'], batch_size = 1000)
+        var = globals()
+        var["d_2"] = d_2
+
+
+        df_temp = df_temp.set_index("t")
+        print("WRITING " + str(len(df_temp)) + " lines in Markets FROM " + element + ": " + str(BinanceToTime(int(round(time.time() * 1000)))))
+        client.write_points(df_temp,"Price", time_precision = "n", database = "Markets", tag_columns = ['Host', 'Pair'], batch_size = 1000)
+        print("-------------------------------")
 
     print("..END..")
-
-#loadPair("ETH", "BTC", 50, "Market", "Ticker")
 

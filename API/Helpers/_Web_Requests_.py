@@ -78,7 +78,6 @@ class M_SocketManager(object):
                     callback(msg)
                 except TypeError:
                     if pre_msg == "" or msg == "":
-                        print("Passing " + path)
                         pass
                 except Exception as e2:
                     print("PRIMERO")
