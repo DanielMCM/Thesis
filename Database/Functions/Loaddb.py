@@ -98,7 +98,7 @@ def process_message(msg, exchange, pair):
             p = float(msg["tick"]["data"][0]["price"])
             Q = float(msg["tick"]["data"][0]["amount"])
         elif exchange == "Kraken":
-            t = BinanceToTime(int(round(float(msg[1][0][2])*1000)))
+            t = datetime.fromtimestamp(int(round(float((msg[1][0][2]))))).strftime('%Y-%m-%d %H:%M:%S') + "." +  msg[1][0][2][11::]
             p = float(msg[1][0][0])
             Q = float(msg[1][0][1])
 
@@ -323,16 +323,16 @@ def loadPair():
 
     client = DataFrameClient('localhost', 8086, 'root', 'root')
 
-    if {"name":"Markets"} not in client.get_list_database():
-        client.create_database("Markets")
-    else:
-        client.drop_database("Markets")
-        client.create_database("Markets")
-    if "difBook" not in client.get_list_database():
-        client.create_database("difBook")
-    else:
-        client.drop_database("difBook")
-        client.create_database("difBook")
+    #if {"name":"Markets"} not in client.get_list_database():
+    #    client.create_database("Markets")
+    #else:
+    #    client.drop_database("Markets")
+    #    client.create_database("Markets")
+    #if "difBook" not in client.get_list_database():
+    #    client.create_database("difBook")
+    #else:
+    #    client.drop_database("difBook")
+    #    client.create_database("difBook")
 
     Binance = Web_Client.Binance()
     Binance_REST = Client.Binance()
@@ -379,10 +379,16 @@ def loadPair():
 
     Coinbase.start_matches('DASH-USD', partial(process_message,exchange = "Coinbase", pair = "dashusd"))
 
-    #################################################
-    #################################################
-    #################################################
-    #################################################
+    ##################################################
+    ##################################################
+    ##################################################
+    ##################################################
+    
+    #BitFlyer.start_ticker("ETH_BTC", partial(process_message_2,exchange = "BitFlyer", pair = "ethbtc")) <------------ TODO
+    #Bitfinex.start_candles("tETHBTC", partial(process_message_2,exchange = "Bitfinex", pair = "ethbtc"))
+    #Bitfinex.start_candles("tBTCUSD", partial(process_message_2,exchange = "Bitfinex", pair = "ethbtc"))
+    #Bitfinex.start_candles("tETHUSD", partial(process_message_2,exchange = "Bitfinex", pair = "ethbtc"))
+    #Bitfinex.start_candles("tXTZUSD", partial(process_message_2,exchange = "Bitfinex", pair = "ethbtc"))
 
     Binance.start_depth_socket("ethbtc",partial(process_message_2,exchange = "Binance", pair = "ethbtc"))
     Bitfinex.start_raw_book("tETHBTC", partial(process_message_2,exchange = "Bitfinex", pair = "ethbtc"))
@@ -401,6 +407,7 @@ def loadPair():
     Bitstamp2.start_liveFull('btcusd', partial(process_message_2,exchange = "Bitstamp", pair = "btcusd"))
     Bitstamp.start_orderBook('btcusd', partial(process_message_2,exchange = "Bitstamp", pair = "btcusd"))
     BitFlyer.start_book("BTC_USD", partial(process_message_2,exchange = "BitFlyer", pair = "btcusd"))
+    BitFlyer.start_ticker("BTC_USD", partial(process_message_2,exchange = "BitFlyer", pair = "ethbtc"))
     BitFlyer2.start_book_updates("BTC_USD", partial(process_message_2,exchange = "BitFlyer", pair = "btcusd"))
     Coinbase.start_ticker('BTC-USD', partial(process_message_2,exchange = "Coinbase", pair = "btcusd"))
 
