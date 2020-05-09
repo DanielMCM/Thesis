@@ -80,18 +80,24 @@ class Huobi_Web_Functions(Huobi, M_SocketManager):
                 }
         return self._start_socket("", callback, "", **{"payload":data})
 
-    def start_refresh(self, symbol, callback, levels = 150):
+    def start_refresh(self, symbol, callback, levels = 20):
         data = {
                   "sub": "market." + symbol + ".mbp.refresh." + str(levels),
                   "id": "id1"
                 }
         return self._start_socket("", callback, "", **{"payload":data})
 
-    def start_by_price(self, symbol, callback, levels = 150):
-        data = {
-                  "sub": "market." + symbol + ".mbp." + str(levels),
-                  "id": "id1"
-                }
+    def start_by_price(self, symbol, callback, id = "id1", levels = 150):
+        if id == "id1":
+            data = {
+                      "sub": "market." + symbol + ".mbp." + str(levels),
+                      "id": "id1"
+                    }
+        else:
+            data = {
+                      "sub": "market." + symbol + ".mbp." + str(levels),
+                      "id": "id2"
+                    }
         return self._start_socket("", callback, "", **{"payload":data})
 
     def start_bid_offer(self, symbol, callback, levels = 150):

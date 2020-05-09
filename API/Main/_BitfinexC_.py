@@ -57,6 +57,11 @@ class Bitfinex_Functions(API_req_creation, Bitfinex):
 
         return self._get("rankings/" + key + ":" + time_frame + ":" + Symbol + "/" + Section,version = "v2", **{"params": {"limit": limit, "start": start, "end": end, "sort": sort}})
 
+    def order_2(self, Symbol):
+
+        return self._get("book/" + Symbol, version = "v1")
+
+
     # POST NOT INCLUDED!!
 
 
