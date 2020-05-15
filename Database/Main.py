@@ -6,7 +6,7 @@ def main():
         loadPair()
     except Exception as e:
         print(e) 
-        print("RESTARTING EVERYTHING!!!!!!!!! " + time.time())
+        print("RESTARTING EVERYTHING!!!!!!!!! " + str(time.time()))
         main()
 
 main()

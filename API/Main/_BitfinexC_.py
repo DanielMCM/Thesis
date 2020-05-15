@@ -92,7 +92,7 @@ class Bitfinex_Web_Functions(Bitfinex, M_SocketManager):
     def start_book(self, symbol, callback, precision = "P0", frequency = "F0", length = 25):
         data = {
             'event': 'subscribe',
-            'channel': 'book',
+            'channel': 'book',v1
             'symbol': symbol,
             'precision': precision, 
             'frequency': frequency, 

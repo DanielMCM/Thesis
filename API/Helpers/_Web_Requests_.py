@@ -26,6 +26,7 @@ class M_SocketManager(object):
         self.error = None
         self.ws = None
         self.thread = []
+        self.kw = 0
 
     def connect_to(self, path, callback, payload = ""):
         #print("PATH = " + path)
@@ -36,8 +37,9 @@ class M_SocketManager(object):
             print(path)
             print(e)
             print("Reconnecting...")
-            time.sleep(5)
+            time.sleep(2)
             self.connect_to(path, callback, payload)
+            return
         if payload != "":
             ws_a.send(payload)
         t = currentThread()
@@ -59,13 +61,12 @@ class M_SocketManager(object):
                 pre_msg =  ws_a.recv()
                 msg = json.loads(pre_msg)
                 callback(msg)
-            except WebSocketConnectionClosedException as e:
-                print("Connection not created!!")
-                print(path)
-                print(e)
-                print("Reconnecting...")
-                time.sleep(5)
+            except (WebSocketConnectionClosedException, ConnectionResetError, ConnectionAbortedError, ConnectionRefusedError) as e:
+                print("\n" + str(e))
+                print("Reconnecting " + path + "... \n")
+                time.sleep(2)
                 self.connect_to(path, callback, payload)
+                return
             except Exception as e:
                 try:
                     msg = json.loads(gzip.decompress(pre_msg).decode())
@@ -94,22 +95,21 @@ class M_SocketManager(object):
                     print(type(msg))
                     print(msg == "")
                     ws_a.close()
-
-            #lock.acquire()
-            #message_list.append(response_a)
-            #lock.release()
             msg = ""
             pre_msg = ""
 
     def _start_socket(self, path, callback, version = "", prefix = "", **Kwargs):
-        con = self.url
-        if version != "":
-            con += version
-        if prefix != "":
-            con += prefix
-        if path != "":
-            con += path
-
+        self.kw = Kwargs
+        if self.url not in path:
+            con = self.url
+            if version != "":
+                con += version
+            if prefix != "":
+                con += prefix
+            if path != "":
+                con += path
+        else:
+            con = path
         payload = ""
         if "payload" in Kwargs:
             payload = json.dumps(Kwargs["payload"], ensure_ascii=False).encode('utf8')
