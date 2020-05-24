@@ -18,6 +18,7 @@ from websocket import create_connection, WebSocketConnectionClosedException
 from pymongo import MongoClient
 from cbpro.cbpro_auth import get_auth_headers
 import gzip
+from random import random
 
 class M_SocketManager(object):
     def __init__(self, url):
@@ -30,8 +31,17 @@ class M_SocketManager(object):
 
     def connect_to(self, path, callback, payload = ""):
         #print("PATH = " + path)
+        pingsend3 = "wss://api.bitfinex" in path
+        bitsig = 0
         try:
             ws_a = create_connection(path)
+            if pingsend3 and bitsig == 0:
+                bitsig = 1
+                data = {"event": "conf", "flags": 32768}
+                data = json.dumps(data).encode()
+                ws_a.send(data)
+            if payload != "":
+                ws_a.send(payload)
         except Exception as e:
             print("Connection not created!!")
             print(path)
@@ -40,8 +50,6 @@ class M_SocketManager(object):
             time.sleep(2)
             self.connect_to(path, callback, payload)
             return
-        if payload != "":
-            ws_a.send(payload)
         t = currentThread()
         bittime = time.time()
         pingsend = "wss://global-api.bithumb.pro" in path
@@ -62,9 +70,13 @@ class M_SocketManager(object):
                 msg = json.loads(pre_msg)
                 callback(msg)
             except (WebSocketConnectionClosedException, ConnectionResetError, ConnectionAbortedError, ConnectionRefusedError) as e:
-                print("\n" + str(e))
-                print("Reconnecting " + path + "... \n")
-                time.sleep(2)
+                #print("\n" + str(e))
+                print("\n Reconnecting " + path + "... \n")
+                if "bitstamp" not in path:
+                    print(e)
+                    time.sleep(random()*5)
+                else:
+                    time.sleep(2)
                 self.connect_to(path, callback, payload)
                 return
             except Exception as e:
@@ -119,8 +131,8 @@ class M_SocketManager(object):
         self.thread.append(thr)
 
     def start(self):
-        for t in self.thread:
-            t.start()
+        for th in self.thread:
+            th.start()
         #for t in self.thread:
         #    t.join()
 

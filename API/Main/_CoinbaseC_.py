@@ -57,7 +57,7 @@ class Coinbase_Web_Functions(Coinbase, M_SocketManager):
     def start_heartbeat(self, symbol, callback):
         data = {
             "type": "subscribe",
-            "channels": [{"name": "heartbeat", "product_ids": ["BTC-USD"]}]
+            "channels": [{"name": "heartbeat", "product_ids": [symbol]}]
         }
         return self._start_socket("", callback, "", **{"payload":data})
 
@@ -75,8 +75,7 @@ class Coinbase_Web_Functions(Coinbase, M_SocketManager):
     def start_ticker(self, symbol, callback):
         data = {
             "type": "subscribe",
-            "channels": [{"name": "heartbeat", "product_ids": ["BTC-USD"]},
-                {
+            "channels": [{
                     "name": "level2",
                     "product_ids": [
                         symbol
@@ -89,7 +88,7 @@ class Coinbase_Web_Functions(Coinbase, M_SocketManager):
     def start_matches(self, symbol, callback):
         data = {
             "type": "subscribe",
-            "channels": [{"name": "heartbeat", "product_ids": ["BTC-USD"]},
+            "channels": [{"name": "heartbeat", "product_ids": [symbol]},
                 {
                     "name": "matches",
                     "product_ids": [
