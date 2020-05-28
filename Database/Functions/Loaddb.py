@@ -281,6 +281,9 @@ def generate_new_thread(exchange, number):
     elif exchange == "Kraken":
         client = Web_Client.Kraken()
         client.start_book('ETH/XBT', partial(process_message_2,exchange = "Kraken", pair = "ethbtc" + str(number)))
+    elif exchange == "Bithumb":
+        client = Web_Client.Bithumb()
+        client.start_order_book('ETH-BTC', partial(process_message_2,exchange = "Bithumb", pair = "ethbtc" + str(number)))
 
     return client
 
@@ -411,7 +414,13 @@ def loadPair():
         time.sleep(4)
     status = 3
     # TO DO respect to time.now, not for loop
-    for i in range(4500):
+    for i in range(3800):
+
+        try:
+            Bithumb2.close()
+        except:
+            pass
+
         if status == 3:
             try:
                 Bitfinex3.close()
@@ -461,14 +470,15 @@ def loadPair():
             Coinbase2.start()
             status = 3
 
+        print("\n----------------")
+        print("\n----------------", file = globals()["file_out"])
+        print("CHECKING DATAFRAMES - " + str(i) + ": " +  str(BinanceToTime(int(round(time.time() * 1000)))), file = globals()["file_out"])
+        print("CHECKING DATAFRAMES - " + str(i) + ": " +  str(BinanceToTime(int(round(time.time() * 1000)))))
+        print("---------------- \n")
+        print("---------------- \n", file = globals()["file_out"])
+
         if i % 5 == 0:
             for element in groups:  
-                print("\n----------------")
-                print("\n----------------", file = globals()["file_out"])
-                print("CHECKING DATAFRAMES - " + str(i) + ": " +  str(BinanceToTime(int(round(time.time() * 1000)))), file = globals()["file_out"])
-                print("CHECKING DATAFRAMES - " + str(i) + ": " +  str(BinanceToTime(int(round(time.time() * 1000)))))
-                print("---------------- \n")
-                print("---------------- \n", file = globals()["file_out"])
                 ldict = {}
                 var = globals()
                 exec("df_temp = " + element + "_df",var, ldict)
@@ -484,7 +494,7 @@ def loadPair():
                 print(element + " : " + str(len(df_temp)) + "; " + str(len(df_Book_temp)) + "; " + str(len(df_dif_temp)), file = globals()["file_out"])
 
 
-                if len(df_Book_temp)>2000:
+                if len(df_Book_temp)>0:
                     print("-------------------------------", file = globals()["file_out"])
                     print("-------------------------------")
                     df_Book_temp = df_Book_temp.set_index("t")
@@ -499,7 +509,7 @@ def loadPair():
                     print("-------------------------------", file = globals()["file_out"])
                     print("-------------------------------")
 
-                if len(df_dif_temp)>2000:
+                if len(df_dif_temp)>0:
                     print("-------------------------------", file = globals()["file_out"])
                     print("-------------------------------")
                     df_dif_temp = df_dif_temp.set_index("t")
@@ -514,7 +524,7 @@ def loadPair():
                     print("-------------------------------", file = globals()["file_out"])
                     print("-------------------------------")
 
-                if len(df_temp)>2000:
+                if len(df_temp)>0:
                     print("-------------------------------", file = globals()["file_out"])
                     print("-------------------------------")
                     df_temp = df_temp.set_index("t")
@@ -545,7 +555,11 @@ def loadPair():
                 print("EXCEPTION!")
                 print(e, file = file_out)
                 print(e)
-
+        
+        if i % 10 == 0:
+            Bithumb2 = generate_new_thread("bithumb", "2")
+            time.sleep(2)
+            Bithumb2.start()
 
         time.sleep(24)
     
@@ -585,7 +599,6 @@ def loadPair():
         print("WRITING " + str(len(df_Book_temp)) + " lines in Book FROM " + element + ": " + str(BinanceToTime(int(round(time.time() * 1000)))))
         try:
             client.write_points(df_Book_temp.assign(Batch_ID = [i for i in range(len(df_Book_temp))]),"Book",time_precision = "n", database = "SecondM", tag_columns = ['Host', 'Pair', 'Batch_ID'], batch_size = 100)
-            df_Book_temp.to_csv(element + "_df_Book")
         except:
             df_Book_temp.to_csv(element + "_df_Book")
 
@@ -594,7 +607,6 @@ def loadPair():
         print("WRITING " + str(len(df_dif_temp)) + " lines in difBook FROM " + element + ": " + str(BinanceToTime(int(round(time.time() * 1000)))))
         try:
             client.write_points(df_dif_temp.assign(Batch_ID = [i for i in range(len(df_dif_temp))]),"difBook",time_precision = "n", database = "SecondM", tag_columns = ['Host', 'Pair', 'Batch_ID'], batch_size = 100)
-            df_dif_temp.to_csv(element + "_df_dif")
         except:
             df_dif_temp.to_csv(element + "_df_dif")
 
@@ -604,7 +616,6 @@ def loadPair():
         print("WRITING " + str(len(df_temp)) + " lines in Price FROM " + element + ": " + str(BinanceToTime(int(round(time.time() * 1000)))))
         try:
             client.write_points(df_temp.assign(Batch_ID = [i for i in range(len(df_temp))]),"Price", time_precision = "n", database = "SecondM", tag_columns = ['Host', 'Pair', 'Batch_ID'], batch_size = 100)
-            df_temp.to_csv(element + "_df")
         except:
             df_temp.to_csv(element + "_df")
         print("------------------------------- \n", file = globals()["file_out"])
