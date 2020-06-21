@@ -24,13 +24,16 @@ Python packages used:
 - requests
 - sklearn
 - sys
+- tensorboard
 - tensorflow-gpu
 - websocket
 - zlib
 
 Following the structure of the designed architecture:
 
-![alt text](https://github.com/DanielMCM/Thesis/blob/master/Image/Process_diagram.png)
+<p align="center">
+  <img src="https://github.com/DanielMCM/Thesis/blob/master/Image/Process_diagram.png" />
+</p>
 
 - Steps 1+2 are included in folders ./API and ./Database, main files for launch are ./Database/Main.py and ./Database/Functions/Loaddb.py.
 - Steps 3+4+5 are included in ./Data_Processing/03_Dataset_Creation.ipynb
