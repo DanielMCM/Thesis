@@ -7,16 +7,14 @@
 
 from __future__ import print_function
 import json
-import base64
-import hmac
-import hashlib
+#import base64
+#import hmac
+#import hashlib
 import time
-import ast
+#import ast
 from threading import Lock, Thread, Event, currentThread
 
 from websocket import create_connection, WebSocketConnectionClosedException
-from pymongo import MongoClient
-from cbpro.cbpro_auth import get_auth_headers
 import gzip
 from random import random
 
