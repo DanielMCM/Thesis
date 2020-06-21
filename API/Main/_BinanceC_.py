@@ -9,8 +9,6 @@ from API.Constants.Binance_Con import Binance
 #-----------------------------------------------
 
 class Binance_Functions(API_req_creation,Binance):
-    #def __init__(self, api_key, api_secret):
-    #    Binance.__init__(self, api_key, api_secret)
 
     def __init__(self, api_key = None, private_key = None):
         Binance.__init__(self, api_key, private_key)

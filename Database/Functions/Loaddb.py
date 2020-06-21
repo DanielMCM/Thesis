@@ -7,9 +7,6 @@ import pandas as pd
 from datetime import datetime, timedelta
 import os
 
-##TODO IF TIME --> CREATE CONFIG FILE WITH CLASS CONTAINING DFs TO MOVE PROCESS_MESSAGES TO OTHER FILES
-##GLOBAL VARIABLES DO NOT WORK ACROSS MODULES/FILES
-
 def nothing(msg):
     pass
 
@@ -81,6 +78,7 @@ def process_message(msg, exchange, pair):
                     "Q": Q
                 })
             exec("globals()['" + exchange + "_" + pair.upper() + "_df'] = globals()['" + exchange + "_" + pair.upper() + "_df'].append(d)", globals(),{"d":d})
+    
     except Exception as e:
         if type(msg) == type([]):
             if msg[1] == "hb":
@@ -131,7 +129,6 @@ def process_message_2(msg, exchange, pair):
                 
                 add = 0
             else:
-                #We are going to try to map bitfinex with an order book requests
                 t = BinanceToTime(msg[2])
                 S = msg[1][1]
                 bids = str(msg[1][0])
@@ -271,12 +268,8 @@ def generate_new_thread(exchange, number):
     if exchange == "Bitfinex":
         client = Web_Client.Bitfinex()
         client.start_book("tETHBTC", partial(process_message_2,exchange = "Bitfinex", pair = "ethbtc" + str(number)))
-        #client.start_book("tBTCUSD", partial(process_message_2,exchange = "Bitfinex", pair = "btcusd" + str(number)))
-        #client.start_book("tETHUSD", partial(process_message_2,exchange = "Bitfinex", pair = "ethusd" + str(number)))
     elif exchange == "Coinbase":
         client = Web_Client.Coinbase()
-        #client.start_ticker('ETH-USD', partial(process_message_2,exchange = "Coinbase", pair = "ethusd" + str(number)))
-        #client.start_ticker('BTC-USD', partial(process_message_2,exchange = "Coinbase", pair = "btcusd" + str(number)))
         client.start_ticker('ETH-BTC', partial(process_message_2,exchange = "Coinbase", pair = "ethbtc" + str(number)))
     elif exchange == "Kraken":
         client = Web_Client.Kraken()
@@ -289,9 +282,7 @@ def generate_new_thread(exchange, number):
 
 def loadPair():
     groups = ["Binance_ETHBTC","Bitfinex_ETHBTC","Bitfinex_ETHBTC2","Bitfinex_ETHBTC3","Bitstamp_ETHBTC", 
-            "Bithumb_ETHBTC", "Coinbase_ETHBTC","Coinbase_ETHBTC2","Coinbase_ETHBTC3","Huobi_ETHBTC", "Kraken_ETHBTC", "Kraken_ETHBTC2","Kraken_ETHBTC3"]
-            #"Bitfinex_BTCUSD","Bitfinex_BTCUSD2","Bitfinex_BTCUSD3","Bitstamp_BTCUSD", "Coinbase_BTCUSD","Coinbase_BTCUSD2",
-            #"Bitfinex_ETHUSD","Bitfinex_ETHUSD2","Bitfinex_ETHUSD3","Bitstamp_ETHUSD", "Coinbase_ETHUSD","Coinbase_ETHUSD2"]
+            "Bithumb_ETHBTC","Bithumb_ETHBTC2", "Coinbase_ETHBTC","Coinbase_ETHBTC2","Coinbase_ETHBTC3","Huobi_ETHBTC", "Kraken_ETHBTC", "Kraken_ETHBTC2","Kraken_ETHBTC3"]
 
     text = "global client, file_out "
     for element in groups:
@@ -349,18 +340,6 @@ def loadPair():
     Huobi.start_trade('ethbtc', partial(process_message,exchange = "Huobi", pair = "ethbtc"))
     Kraken.start_trade('ETH/XBT', partial(process_message,exchange = "Kraken", pair = "ethbtc"))
 
-    #time.sleep(1)
-
-    #Bitfinex.start_trades("tBTCUSD", partial(process_message,exchange = "Bitfinex", pair = "btcusd"))
-    #Bitstamp.start_ticker('btcusd', partial(process_message,exchange = "Bitstamp", pair = "btcusd"))
-    #Coinbase.start_matches('BTC-USD', partial(process_message,exchange = "Coinbase", pair = "btcusd"))
-
-    #time.sleep(1)
-
-    #Bitfinex.start_trades("tETHUSD", partial(process_message,exchange = "Bitfinex", pair = "ethusd"))
-    #Bitstamp.start_ticker('ethusd', partial(process_message,exchange = "Bitstamp", pair = "ethusd"))
-    #Coinbase.start_matches('ETH-USD', partial(process_message,exchange = "Coinbase", pair = "ethusd"))
-
     #############################################
     #############################################
     #############################################
@@ -370,14 +349,6 @@ def loadPair():
     Bithumb.start_order_book('ETH-BTC', partial(process_message_2,exchange = "Bithumb", pair = "ethbtc"))
     Bitstamp.start_detailOrder('ethbtc', partial(process_message_2,exchange = "Bitstamp", pair = "ethbtc"))
     Huobi.start_depth('ethbtc', partial(process_message_2,exchange = "Huobi", pair = "ethbtc"))
-
-    #time.sleep(1)
-
-    #Bitstamp.start_detailOrder('btcusd', partial(process_message_2,exchange = "Bitstamp", pair = "btcusd"))
-
-    #time.sleep(1)
-
-    #Bitstamp.start_detailOrder('ethusd', partial(process_message_2,exchange = "Bitstamp", pair = "ethusd"))
 
 
     Binance.start()
@@ -413,8 +384,8 @@ def loadPair():
             print(e)
         time.sleep(4)
     status = 3
-    # TO DO respect to time.now, not for loop
-    for i in range(3800):
+
+    for i in range(2100):
 
         try:
             Bithumb2.close()
@@ -557,7 +528,7 @@ def loadPair():
                 print(e)
         
         if i % 10 == 0:
-            Bithumb2 = generate_new_thread("bithumb", "2")
+            Bithumb2 = generate_new_thread("Bithumb", "2")
             time.sleep(2)
             Bithumb2.start()
 

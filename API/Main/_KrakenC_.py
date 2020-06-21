@@ -9,8 +9,6 @@ from API.Constants.Kraken_Con import Kraken
 #-----------------------------------------------
 
 class Kraken_Functions(API_req_creation,Kraken):
-    #def __init__(self, api_key, api_secret):
-    #    Binance.__init__(self, api_key, api_secret)
 
     def __init__(self, api_key = None, private_key = None):
         Kraken.__init__(self, api_key, private_key)

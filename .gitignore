@@ -368,3 +368,12 @@ MigrationBackup/
 /Tests/Untitled1.ipynb
 /Tests/output.txt
 /Tests/Older
+/Tests/00_Models
+/Tests/01_Data
+/Tests/02_TB_logs
+/Tests/99_Older
+/Data_Processing/.ipynb_checkpoints
+/Data_Processing/00_Models
+/Data_Processing/01_Data
+/Data_Processing/02_TB_logs
+/Data_Processing/99_Older

@@ -9,8 +9,6 @@ from API.Constants.Huobi_Con import Huobi
 #-----------------------------------------------
 
 class Huobi_Functions(API_req_creation,Huobi):
-    #def __init__(self, api_key, api_secret):
-    #    Binance.__init__(self, api_key, api_secret)
 
     def __init__(self, api_key = None, private_key = None):
         Huobi.__init__(self, api_key, private_key)

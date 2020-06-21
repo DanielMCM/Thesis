@@ -1,5 +1,7 @@
 class BinanceAPIException(Exception):
 
+    # Handle Binance errors
+
     def __init__(self, response):
         self.code = 0
         try:

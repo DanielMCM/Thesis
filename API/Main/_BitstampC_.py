@@ -9,8 +9,6 @@ from API.Constants.Bitstamp_Con import Bitstamp
 #-----------------------------------------------
 
 class Bitstamp_Functions(API_req_creation,Bitstamp):
-    #def __init__(self, api_key, api_secret):
-    #    Binance.__init__(self, api_key, api_secret)
 
     def __init__(self, api_key = None, private_key = None):
         Bitstamp.__init__(self, api_key, private_key)
