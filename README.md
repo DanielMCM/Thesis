@@ -1,7 +1,5 @@
-# Thesis
-Master thesis repository.
-
-Requirements:
+# Master Thesis
+Master thesis repository. Requirements:
 
 - [Influxdb](https://docs.influxdata.com/influxdb/v1.8/introduction/install/)
 - The whole process was run in Windows OS.
